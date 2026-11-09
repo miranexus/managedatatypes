@@ -1,6 +1,5 @@
 package com.example.managedatatypes;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -16,19 +15,16 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends EdgeToEdgeActivity {
 
     public static Retrofit retrofit;
     public static InterfaceRetrofit interfaceRetrofit;
-    public static String BASE_URL;
+    public static String baseUrl;
     public static String recycleDelete = "";
-    public static String PACKAGE_NAME;
+    public static String packageName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,10 +32,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // DEFINE THE BASE URL FROM STRING RESOURCES EITHER FOR NODE.JS OR PHP DEPENDING ON ACTIVITY
-        BASE_URL = getResources().getString(R.string.mongonodeurl);
+        baseUrl = getResources().getString(R.string.mongonodeurl);
 
         // SET THE NAME OF THE PACKAGE ID FOR USE LATER
-        PACKAGE_NAME = getApplicationContext().getPackageName();
+        packageName = getApplicationContext().getPackageName();
 
         // INITIALIZE TOOLBAR
         Toolbar toolbar = findViewById(R.id.toolbarMain);
@@ -50,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
         // INSIDE ONCREATE INSTANTIATE THE RETROFIT OBJECT
         retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(baseUrl)
                 // THIS "GsonConverterFactory" WILL CONVERT THE GSON DATA TO A JAVA OBJECT
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
@@ -71,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                 new CalendarFragment()).commit());
 
-        wakeUpMongoServer();
     }
     // END OF ONCREATE
 
@@ -90,9 +85,9 @@ public class MainActivity extends AppCompatActivity {
     // CLOSE FRAGMENTS ON BACK PRESS
     @Override
     public void onBackPressed() {
-        List<Fragment> all_frags = getSupportFragmentManager().getFragments();
-        if (all_frags.size() > 0) {
-            for (Fragment frag : all_frags) {
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        if (fragments.size() > 0) {
+            for (Fragment frag : fragments) {
                 getSupportFragmentManager().beginTransaction().remove(frag).commit();
 
                 // INITIALIZE TOOLBAR
@@ -117,17 +112,4 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // THIS METHOD IS ONLY FOR HEROKU TO WAKE IT UP WHEN IDLE JUST CHECKS IF THE DATABASE HAS COLLECTIONS
-    private void wakeUpMongoServer() {
-        InterfaceRetrofit InterfaceRetrofit = MainActivity.retrofit.create(InterfaceRetrofit.class);
-        Call<List<MongoVariables>> call = InterfaceRetrofit.checkExistsMongo();
-        call.enqueue(new Callback<List<MongoVariables>>() {
-            @Override
-            public void onResponse(Call<List<MongoVariables>> call, Response<List<MongoVariables>> response) {
-            }
-            @Override
-            public void onFailure(Call<List<MongoVariables>> call, Throwable t) {
-            }
-        });
-    }
 }

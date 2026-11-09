@@ -4,74 +4,79 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/brand_background"
     tools:context=".SQLiteActivity">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbarSQLite"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/purple_500"
+        android:background="@color/brand_primary"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        tools:visibility="visible" />
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-    <Spinner
-        android:id="@+id/spinnerSQLite"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/sqliteActionCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:gravity="center_horizontal"
-        android:textAlignment="center"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineLeftVerSQLite"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/guidelineRightVerSQLite"
-        app:layout_constraintTop_toBottomOf="@+id/toolbarSQLite" />
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="@color/brand_surface"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="1dp"
+        app:strokeColor="@color/brand_outline"
+        app:strokeWidth="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbarSQLite">
 
-    <Button
-        android:id="@+id/btnSQLiteSpinner"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Select"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineLeftVerSQLite"
-        app:layout_constraintStart_toStartOf="@+id/guidelineRightVerSQLite"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerSQLite" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="SQLite · On this device"
+                android:textColor="@color/brand_secondary_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/spinnerSQLite"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="6dp"
+                android:backgroundTint="@color/brand_outline"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSQLiteSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Continue" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/my_recycler_view_sqlite"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:paddingTop="20dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="16dp"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnSQLiteSpinner"
+        app:layout_constraintTop_toBottomOf="@id/sqliteActionCard"
         tools:listitem="@layout/recycler_list_item" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineTopHorSQLite"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.05" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineLeftVerSQLite"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.90" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guidelineRightVerSQLite"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.10" />
-
-
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,94 +1,75 @@
-# managedatatypes
-This example application demonstrates CRUD operations using the same four fields - date, name, email, and password and how they can be implemented using REST API Retrofit-Node.js-MongoDB, REST API Retrofit-PHP-MySQL or SQLite. In addition a Calendar View and an Export XLS serve as extras to view or save data 
+# Manage Data Types
 
-Video Instructions:
-https://drive.google.com/file/d/18W0ndEs44749LsI2KQtDmfuVVzJquoVG/view?usp=sharing
+An Android sample app for learning CRUD operations (create, read, update, and
+delete) with three storage options:
 
-Download the zip file and open it on android studio
+| Example | Storage / service | Needs a server? |
+| --- | --- | --- |
+| SQLite | Local database on the device | No |
+| MongoDB | Node.js API using Retrofit | Yes |
+| MySQL | PHP API using Retrofit | Yes |
 
-<b>Set up REST API Retrofit-PHP-MySQL</b>
+The app also includes a calendar view and exports displayed data as `.xls`.
 
-Depending on whether you are using XXAMP or another web server solution stack or a live version take note of the following.
-Open the "phpfiles" folder and drop the contents (phpmanagedatatypes folder & config.php) directly into C:\xampp\htdocs or wherever you have the folder.
-If you are using a live version, upload the files directly to your website and note the url where "phpmanagedatatypes" folder & "config.php" are found.
-Create a database in PHPMyAdmin called "dtypes" then create a table called "textletsretrofit" with a column for date, name, email, and password.
-Alternatively copy the contents of the "textletsretrofit.sql" file into the "dtypes" database in PHPMyAdmin, note the autoincrementing id column.
-Modify the "config.php" accordingly, if you are using XXAMP you won't need to but if it is live you will need to add your database credentials.
+## Get started
 
-Go to app>res>values>strings.xml in Android Studio
+1. Open this repository in Android Studio and let it install Android SDK
+   Platform 36.
+2. Use JDK 17 or newer (the project uses Gradle 9.8.2 and Android Gradle Plugin
+   9.5.1).
+3. Run the app on an Android 6.0 (API 23) or newer device or emulator.
+4. Choose **SQLite** to try the app without configuring a backend.
 
-For XXAMP or another web server solution stack enter your ip address where the zeros are
-<string name="mysqlphpurl">http://000.000.0.00/</string>
+The MongoDB and PHP/MySQL examples need their respective services for remote
+operations. Their URLs are configured in
+`app/src/main/res/values/strings.xml`. The Android emulator can reach services
+running on the host computer at `10.0.2.2`. Use HTTPS for deployed services;
+cleartext HTTP is enabled only in the Android debug build.
 
-For a live version just add the url where the php files are located, make sure the "/" is at the end
-<string name="mysqlphpurl">http://www.example.com/</string>
+## MongoDB API (Node.js)
 
-Now you will be able to implement CRUD using Android-Retrofit-PHP-MySQL
+The API requires Node.js 22.12 or newer (Node.js 24 LTS recommended) and
+MongoDB. For a local MongoDB server, create `nodejsfiles/.env`:
 
+```text
+MONGODB_URI=mongodb://localhost:27017
+PORT=3003
+```
 
-<b>Set up REST API Retrofit-Node.js-MongoDB</b>
+For MongoDB Atlas, use its connection string for `MONGODB_URI`. Keep `.env`
+private; it is excluded from Git. In a terminal, run:
 
-For this you will need a code editor like Visual Studio Code and to have Node.js and MongoDB installed on your computer.
-For a live version you can open an account on heroku.com to host the Node.js server files.
-Open the folder "nodejsfiles" in Visual Studio Code and inside it create a file called ".env" which should look like this
+```sh
+cd nodejsfiles
+npm ci
+npm start
+```
 
-PORT = 3003
+To run the API tests, use `npm test` from `nodejsfiles`. For a hosted API, set
+`MONGODB_URI` in the deployment platform's environment settings instead of
+committing it. The legacy `url` environment variable is also supported.
 
-url = mongodb+srv://.....
+Set `mongonodeurl` in `strings.xml` to `http://10.0.2.2:3003/` for local
+emulator development. The optional Heroku wake-up check runs only when this
+URL uses HTTPS and a `*.herokuapp.com` host.
 
-Add the port, in this case 3003, and also the link to your MongoDB collections after the "....."
-We don't need to create a table in this case as Node.js and MongoD will do this for us.
+## MySQL API (PHP)
 
-Open a terminal and install the following:
+The endpoints require PHP 8.3 or newer with PDO MySQL enabled, plus a MySQL
+database. Deploy `phpfiles/config.php` alongside the `phpmanagedatatypes`
+directory. Create a database named `dtypes`, then import the provided
+[`dtypes.sql`](dtypes.sql) schema to create and populate the
+`textletsretrofit` table.
 
-git init
+Configure the connection with `DB_HOST`, `DB_USER`, and `DB_PASSWORD`.
+`DB_NAME` is optional and defaults to `dtypes`; `DB_PREFIX` can provide a
+prefix when `DB_NAME` is not set. Keep credentials outside version control.
+Set `mysqlphpurl` in `strings.xml` to the base URL that contains the
+`phpmanagedatatypes` directory (for example, `https://example.com/`).
 
-npm install dotenv --save
+## Notes
 
-npm i mongodb --save
-
-npm i express --save
-
-npm i mongoose --save
-
-Go to app>res>values>strings.xml in Android Studio and add the following:
-
-<string name="mongonodeurl">http://10.0.2.2:3003</string>
-
-Type npm start into the terminal and you will be able to implement CRUD when you start the Android Studio emulator.
-
-In order to have a live version do the following:
-
-If you have an account on heroku add a file called "Procfile" in the "nodejsfiles" folder with the following text:
-
-web: node index.js
-
-Now type the following into the terminal and write the name you want to call the project after "heroku create"
-
-heroku create example-project-android-node
-
-git add .
-
-git commit -m "first"
-
-git push heroku master
-
-The application will then be created on heroku.com for a live version. 
-Open the application on the website and go to settings>Reveal Config Vars. Add the details from the .env file we created earlier.
-
-Go to app>res>values>strings.xml in Android Studio and add the url for your application on heroku
-
-<string name="mongonodeurl">https://.......herokuapp.com/</string>
-
-The CRUD operations using Retrofit-Node.js-MongoDB will work from anywhere now.
-
-Additional features include the ability to view and modify the data based on the timestamps in the databases using CompactCalendarView by SundeepK:
-https://github.com/SundeepK/CompactCalendarView
-
-Any data displayed on the RecyclerView can also be exported as a .xls file as a HSSFWorkbook using the pre-installed Apache POI libraries.
-
-All CRUD oerations using SQLite are also demonstrated.
-
-
-
-
+This educational app is not a production authentication service: account
+passwords are stored and exported as plain text. The calendar widget and
+Apache POI `.xls` export use legacy Android-compatible libraries; evaluate
+them separately before upgrading to avoid changing those features.

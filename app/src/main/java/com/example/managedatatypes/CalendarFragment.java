@@ -46,7 +46,7 @@ import retrofit2.Response;
 public class CalendarFragment extends Fragment {
 
     // DECLARE ALL THE CALENDAR VARIABLES
-    public static final Calendar currentCalender = Calendar.getInstance(Locale.getDefault());
+    public static final Calendar currentCalendar = Calendar.getInstance(Locale.getDefault());
     public static final SimpleDateFormat dateFormatForMonth = new SimpleDateFormat("MMM - yyyy", Locale.getDefault());
     public static CompactCalendarView compactCalendarView;
     public static ActionBar toolbar;
@@ -73,33 +73,24 @@ public class CalendarFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 mainTabView.findViewById(R.id.btnCalendarSpinner).setOnClickListener(v -> {
-                    if (position == 0) {
-                        // SET UP A TAG TO REFERENCE THE ACTIVITY FROM THE RECYCLER ADAPTER
-                        MainActivity.recycleDelete = getResources().getString(R.string.SQLiteCalendarRecycle);
-                        loadSQLite();
-                        Toast.makeText(compactCalendarView.getContext(), getResources().getString(R.string.addtocalendar),
-                                Toast.LENGTH_LONG).show();
-                        compactCalendarView.invalidate();
-                    }
-                    if (position == 1) {
-                        // SET UP A TAG TO REFERENCE THE ACTIVITY FROM THE RECYCLER ADAPTER
-                        MainActivity.recycleDelete = getResources().getString(R.string.MongoCalendarRecycle);
-                        // SET UP THE BASE URL DEPENDING ON WHICH ACTIVITY WE ARE IN, URL IN STRING RESOURCES
-                        MainActivity.BASE_URL = getResources().getString(R.string.mongonodeurl);
-                        loadMongo();
-                        Toast.makeText(compactCalendarView.getContext(), getResources().getString(R.string.addtocalendar),
-                                Toast.LENGTH_LONG).show();
-                        compactCalendarView.invalidate();
-                    }
-                    if (position == 2) {
-                        // SET UP A TAG TO REFERENCE THE ACTIVITY FROM THE RECYCLER ADAPTER
-                        MainActivity.recycleDelete = getResources().getString(R.string.SQLiteCalendarRecycle);
-                        // SET UP THE BASE URL DEPENDING ON WHICH ACTIVITY WE ARE IN, URL IN STRING RESOURCES
-                        MainActivity.BASE_URL = getResources().getString(R.string.mysqlphpurl);
-                        loadMySQLPHP();
-                        Toast.makeText(compactCalendarView.getContext(), getResources().getString(R.string.addtocalendar),
-                                Toast.LENGTH_LONG).show();
-                        compactCalendarView.invalidate();
+                    Runnable[] actions = {
+                            () -> loadCalendarData(
+                                    R.string.SQLiteCalendarRecycle,
+                                    null,
+                                    CalendarFragment::loadSQLite),
+                            () -> loadCalendarData(
+                                    R.string.MongoCalendarRecycle,
+                                    R.string.mongonodeurl,
+                                    CalendarFragment::loadMongo),
+                            () -> loadCalendarData(
+                                    R.string.MySQLPHPCalendarRecycle,
+                                    R.string.mysqlphpurl,
+                                    CalendarFragment::loadMySQLPHP)
+                    };
+                    if (position >= 0 && position < actions.length) {
+                        actions[position].run();
+                    } else {
+                        android.util.Log.w(TAG, "Ignoring unknown calendar data source: " + position);
                     }
                 });
             }
@@ -208,6 +199,17 @@ public class CalendarFragment extends Fragment {
         return mainTabView;
     }
 
+    private void loadCalendarData(int recycleMode, Integer baseUrlResourceId, Runnable loader) {
+        MainActivity.recycleDelete = getString(recycleMode);
+        if (baseUrlResourceId != null) {
+            MainActivity.baseUrl = getString(baseUrlResourceId);
+        }
+        loader.run();
+        Toast.makeText(compactCalendarView.getContext(), getString(R.string.addtocalendar),
+                Toast.LENGTH_LONG).show();
+        compactCalendarView.invalidate();
+    }
+
     // END OF ON CREATE
 
     // THIS METHOD IS CALLED FROM THE RECYCLER VIEW WHEN CLICKED TO UPDATE ENTRY
@@ -220,8 +222,7 @@ public class CalendarFragment extends Fragment {
 
         titleEdit.setText(email);
 
-        SQLiteDbHelper myDBAll;
-        myDBAll = new SQLiteDbHelper(context);
+        SQLiteDatabaseHelper myDBAll = new SQLiteDatabaseHelper(context);
 
         btnClick.setOnClickListener(view1 -> {
             myDBAll.updateUser(nameEdit.getText().toString(),
@@ -239,14 +240,14 @@ public class CalendarFragment extends Fragment {
     }
 
     // THIS METHOD IS CALLED FROM THE RECYCLER VIEW WHEN CLICKED TO UPDATE ENTRY
-    public static void handleMongoCalendarUpdateDialog(View view, Context context, String emai) {
+    public static void handleMongoCalendarUpdateDialog(View view, Context context, String email) {
 
         Button btnClick = view.findViewById(R.id.btnUpdateDial);
         final EditText nameEdit = view.findViewById(R.id.nameUpdateDial);
         final EditText passwordEdit = view.findViewById(R.id.passwordUpdateDial);
         final TextView titleEdit = view.findViewById(R.id.titleUpdateDial);
 
-        titleEdit.setText(emai);
+        titleEdit.setText(email);
 
         btnClick.setOnClickListener(view1 -> {
 
@@ -263,7 +264,7 @@ public class CalendarFragment extends Fragment {
 
                 //map.put("date", timeStamp);
                 map.put("name", nameEdit.getText().toString());
-                map.put("email", emai);
+                map.put("email", email);
                 map.put("password", passwordEdit.getText().toString());
 
                 Call<Void> call = MainActivity.interfaceRetrofit.updateMongo(map);
@@ -297,14 +298,14 @@ public class CalendarFragment extends Fragment {
     }
 
     // THIS METHOD IS CALLED FROM THE RECYCLER VIEW WHEN CLICKED TO UPDATE ENTRY
-    public static void handleMySQLPHPCalendarUpdateDialog(View view, Context context, String emai) {
+    public static void handleMySQLPHPCalendarUpdateDialog(View view, Context context, String email) {
 
         Button btnClick = view.findViewById(R.id.btnUpdateDial);
         final EditText nameEdit = view.findViewById(R.id.nameUpdateDial);
         final EditText passwordEdit = view.findViewById(R.id.passwordUpdateDial);
         final TextView titleEdit = view.findViewById(R.id.titleUpdateDial);
 
-        titleEdit.setText(emai);
+        titleEdit.setText(email);
 
         btnClick.setOnClickListener(view1 -> {
 
@@ -317,9 +318,9 @@ public class CalendarFragment extends Fragment {
                 //long timeStampLong = System.currentTimeMillis()/1000;
                 //String timeStamp = Long.toString(timeStampLong);
 
-                InterfaceRetrofit myAPIService = MySQLPHPActivity.RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-                Call<Void> call = myAPIService.updateMySQLPHP(nameEdit.getText().toString(),
-                        emai,
+                InterfaceRetrofit apiService = MySQLPHPActivity.RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+                Call<Void> call = apiService.updateMySQLPHP(nameEdit.getText().toString(),
+                        email,
                         passwordEdit.getText().toString());
 
                 call.enqueue(new Callback<Void>() {
@@ -352,30 +353,22 @@ public class CalendarFragment extends Fragment {
     public static void loadSQLite() {
         compactCalendarView.removeAllEvents();
 
-        // DO NOT CHANGE THE ORDER OF THESE
-        SQLiteDbHelper dbHelperMoodMon = new SQLiteDbHelper(compactCalendarView.getContext());
-        List<SQLiteVariables> usersList = dbHelperMoodMon.getAllUsers();
-        int usersCountTotal = usersList.size();
-
-        // GET THE LIST OF ALL DB ENTRIES AND ADD TO STRING BUILDER
-        StringBuilder allUsersBuild = new StringBuilder();
-        allUsersBuild.append("[");
-        for(int tb = 0; tb < usersCountTotal; tb++){
-            allUsersBuild
-                    .append("{\"date\":\"")
-                    .append(usersList.get(tb).getDateusers())
-                    .append("\",\"name\":\"")
-                    .append(usersList.get(tb).getNameusers())
-                    .append("\",\"email\":\"")
-                    .append(usersList.get(tb).getEmaiusers())
-                    .append("\",\"password\":\"")
-                    .append(usersList.get(tb).getPassusers())
-                    .append("\"},");
+        SQLiteDatabaseHelper dbHelperMoodMon = new SQLiteDatabaseHelper(compactCalendarView.getContext());
+        List<SQLiteUser> usersList = dbHelperMoodMon.getAllUsers();
+        JSONArray users = new JSONArray();
+        for (SQLiteUser user : usersList) {
+            JSONObject item = new JSONObject();
+            try {
+                item.put("date", user.getDate());
+                item.put("name", user.getName());
+                item.put("email", user.getEmail());
+                item.put("password", user.getPassword());
+                users.put(item);
+            } catch (JSONException e) {
+                android.util.Log.e(TAG, "Unable to load SQLite calendar data", e);
+            }
         }
-        allUsersBuild.setLength(allUsersBuild.length() - 1);
-        allUsersBuild.append("]");
-        //System.out.println("StringBuilder All SQLite Entries = " + allUsersBuild);
-        jsonDataString = allUsersBuild.toString();
+        jsonDataString = users.toString();
         try {
             addEvents();
         } catch (JSONException e) {
@@ -386,8 +379,8 @@ public class CalendarFragment extends Fragment {
     // THIS METHOD IS CALLED FROM THE SPINNER TO POPULATE THE CALENDAR VIEW WITH ALL DB ENTRIES
     public static void loadMongo() {
         compactCalendarView.removeAllEvents();
-        InterfaceRetrofit InterfaceRetrofit = MainActivity.retrofit.create(InterfaceRetrofit.class);
-        Call<List<MongoVariables>> call = InterfaceRetrofit.selectAllMongo();
+        InterfaceRetrofit api = MainActivity.retrofit.create(InterfaceRetrofit.class);
+        Call<List<MongoVariables>> call = api.selectAllMongo();
         call.enqueue(new Callback<List<MongoVariables>>() {
             @Override
             public void onResponse(Call<List<MongoVariables>> call, Response<List<MongoVariables>> response) {
@@ -419,8 +412,8 @@ public class CalendarFragment extends Fragment {
     public static void loadMySQLPHP() {
         compactCalendarView.removeAllEvents();
 
-        InterfaceRetrofit myAPIService = MySQLPHPActivity.RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-        Call<List<MySQLPHPVariables>> call = myAPIService.selectAllMySQLPHP();
+        InterfaceRetrofit apiService = MySQLPHPActivity.RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+        Call<List<MySQLPHPVariables>> call = apiService.selectAllMySQLPHP();
         call.enqueue(new Callback<List<MySQLPHPVariables>>() {
             @Override
             public void onResponse(Call<List<MySQLPHPVariables>> call, Response<List<MySQLPHPVariables>> response) {
@@ -454,6 +447,9 @@ public class CalendarFragment extends Fragment {
     //  THIS METHOD SAVES CODE TO CREATE A DATE ARRAY FOR THE ADD EVENTS METHOD
     private static String[] jsonBuilder(String column) throws JSONException {
         JSONArray jsonArray = new JSONArray(jsonDataString);
+        if (jsonArray.length() == 0) {
+            return new String[0];
+        }
         // GET THE LIST OF ALL NAME ENTRIES AND ADD TO STRING BUILDER
         StringBuilder usersBuild = new StringBuilder();
         for(int nj = 0; nj < jsonArray.length(); nj++){
@@ -469,14 +465,17 @@ public class CalendarFragment extends Fragment {
     // THIS METHOD POPULATES THE CALENDAR WITH THE TIMESTAMPS IN THE DATABASE
     public static void addEvents() throws JSONException {
 
-        currentCalender.setTime(new Date());
+        currentCalendar.setTime(new Date());
 
         // GET THE FIRST DAY OF THE CURRENT MONTH WITH THE TIME RIGHT NOW
-        currentCalender.set(Calendar.DAY_OF_MONTH, 1);
-        Date firstDayOfMonth = currentCalender.getTime();
+        currentCalendar.set(Calendar.DAY_OF_MONTH, 1);
+        Date firstDayOfMonth = currentCalendar.getTime();
 
         // GET THE LIST OF TIMESTAMPS FROM THE DATABASE
         String[] timeStampArray = jsonBuilder("date");
+        if (timeStampArray.length == 0) {
+            return;
+        }
         //System.out.println("timeStampArray = " + Arrays.toString(timeStampArray));
 
         // SEPARATE THE TIMESTAMPS INTO YEAR, MONTH, DAY AND ADD THEM TO ARRAYS
@@ -507,19 +506,19 @@ public class CalendarFragment extends Fragment {
 
         for (int i = 0; i < timeStampArray.length; i++) {
 
-            currentCalender.setTime(firstDayOfMonth);
+            currentCalendar.setTime(firstDayOfMonth);
 
             // SET YEAR TO POPULATE EVENTS
-            currentCalender.set(Calendar.YEAR, Integer.parseInt(yearsArray[i]));
+            currentCalendar.set(Calendar.YEAR, Integer.parseInt(yearsArray[i]));
 
             // SET E.G. SEPTEMBER (8) AS MONTH TO POPULATE EVENTS
-            currentCalender.set(Calendar.MONTH, Integer.parseInt(monthArray[i]) - 1);
+            currentCalendar.set(Calendar.MONTH, Integer.parseInt(monthArray[i]) - 1);
 
             // SET THE DATE TO ADD THE EVENT E.G. 22ND SEPTEMBER (21)
-            currentCalender.add(Calendar.DATE, Integer.parseInt(datesArray[i]) - 1);
+            currentCalendar.add(Calendar.DATE, Integer.parseInt(datesArray[i]) - 1);
 
             // GET THE CURRENT TIME IN MILLISECONDS AS A REFERENCE FOR THE EVENTS
-            long timeInMillis = currentCalender.getTimeInMillis();
+            long timeInMillis = currentCalendar.getTimeInMillis();
 
             // GET EACH TIME STAMP FOR THE EVENTS
             long timeInMillistamp = Long.parseLong(timeStampArray[i]);

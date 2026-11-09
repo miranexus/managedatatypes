@@ -14,7 +14,7 @@ public class RecyclerVariables {
         this.password = password;
     }
 
-    public String getdate() {
+    public String getDate() {
         return date;
     }
     public String getName() {
@@ -27,4 +27,3 @@ public class RecyclerVariables {
         return password;
     }
 }
-

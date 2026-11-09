@@ -139,7 +139,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             String emailText = emailView.getText().toString();
             String passwordText = passwordView.getText().toString();
 
-            SQLiteDbHelper myDBAll = new SQLiteDbHelper(cText);
+            SQLiteDatabaseHelper myDBAll = new SQLiteDatabaseHelper(cText);
 
             // ACTIVATES IF "public static String recycleDelete" HAS BEEN ACCESSED FROM "SQLiteActivity"
             if (MainActivity.recycleDelete.equals(cText.getResources().getString(R.string.SQLiteActivityRecycle)) ||
@@ -150,9 +150,14 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         .setCancelable(true)
                         .setPositiveButton("Yes", (dialog, id) -> {
                             // GET THE ID OF THE EMAIL OF THE ITEM CLICKED ON THE RECYCLERVIEW
-                            String nameGrab = myDBAll.grabEntry(emailText, SQLiteContract.SaveUsersTable._ID);
+                            String userId = myDBAll.getUserFieldByEmail(emailText, SQLiteContract.SaveUsersTable._ID);
+                            if (userId == null) {
+                                Toast.makeText(cText, cText.getResources().getString(R.string.noentries),
+                                        Toast.LENGTH_LONG).show();
+                                return;
+                            }
                             // DELETE THE USER BASED ON THE ID PROVIDED
-                            myDBAll.deleteUser(Integer.valueOf(nameGrab));
+                            myDBAll.deleteUser(Integer.parseInt(userId));
                             Toast.makeText(cText, cText.getResources().getString(R.string.entrydelete),
                                     Toast.LENGTH_LONG).show();
                             // REMOVE THE ITEM FROM THE RECYCLER VIEW
@@ -220,7 +225,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         ItemViewHolder itemViewHolder = (ItemViewHolder) viewHolder;
         RecyclerVariables variables = (RecyclerVariables) listRecyclerItem.get(i);
 
-        itemViewHolder.date.setText(variables.getdate());
+        itemViewHolder.date.setText(variables.getDate());
         itemViewHolder.name.setText(variables.getName());
         itemViewHolder.email.setText(variables.getEmail());
         itemViewHolder.password.setText(variables.getPassword());
@@ -231,4 +236,3 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return listRecyclerItem.size();
     }
 }
-

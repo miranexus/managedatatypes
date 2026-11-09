@@ -35,8 +35,7 @@ public final class SQLiteContract {
         public static final String TABLE_USERS = "user_details";
         public static final String COLUMN_DATE = "Date";
         public static final String COLUMN_NAME = "Name";
-        public static final String COLUMN_EMAI = "Email";
-        public static final String COLUMN_PASS = "Password";
+        public static final String COLUMN_EMAIL = "Email";
+        public static final String COLUMN_PASSWORD = "Password";
     }
 }
-

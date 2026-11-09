@@ -1,42 +1,32 @@
 <?php
 
-include("../config.php");
+require_once __DIR__ . '/../config.php';
 
-$hostname = $lochost;
-$username = $root;
-$password = $pswrd;
-$databaseName = $prefix."dtypes";
-
-if($_SERVER['REQUEST_METHOD']=='POST') {
-  
-  $conn = mysqli_connect($hostname, $username, $password, $databaseName);
-
-  $email = $_POST['email'];
-  $password = $_POST['password'];
-
-  $query_check_user = "select date, name, email, password from textletsretrofit where email = '$email' and password = '$password'";
-
-  $result = mysqli_query($conn, $query_check_user);
-
-  if(mysqli_num_rows($result) == 0) {
-    $response['success'] = false;
-    $response['message'] = "User not found";
-
-  } else {
-
-    $row = mysqli_fetch_assoc($result);
-
-    $response['success'] = true;
-    $response['message'] = "User logged in successfully";
-    
-    $response['date'] = $row['date'];
-    $response['name'] = $row['name'];
-    $response['email'] = $row['email'];
-    $response['password'] = $row['password'];
-  }
-  echo json_encode($response);
-  mysqli_close($conn);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    exit;
 }
 
-?>
-        
+$statement = databaseConnection()->prepare(
+    'SELECT date, name, email, password FROM textletsretrofit ' .
+    'WHERE email = :email AND password = :password'
+);
+$statement->execute([
+    'email' => $_POST['email'] ?? '',
+    'password' => $_POST['password'] ?? '',
+]);
+$user = $statement->fetch();
+
+if (!$user) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'User not found',
+    ], JSON_THROW_ON_ERROR);
+    exit;
+}
+
+echo json_encode([
+    'success' => true,
+    'message' => 'User logged in successfully',
+    ...$user,
+], JSON_THROW_ON_ERROR);

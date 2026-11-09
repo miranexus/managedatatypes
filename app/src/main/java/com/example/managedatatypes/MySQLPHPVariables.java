@@ -16,7 +16,7 @@ public class MySQLPHPVariables {
     @SerializedName("message")
     private boolean message;
 
-    public String getdate() {
+    public String getDate() {
         return date;
     }
     public void setDate(String date) {

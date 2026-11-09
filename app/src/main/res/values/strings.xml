@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">Manage Data Types</string>
 
-    <!-- ADD YOUR IP ADDRESS FOR XXAMP OR YOUR WEBSITE URL -->
-    <string name="mysqlphpurl">http://000.000.0.00/</string>
+    <!-- Set to your PHP service URL when using the optional PHP/MySQL backend. -->
+    <string name="mysqlphpurl">http://10.0.2.2/</string>
 
-    <!--  FOR NODE.JS ADD A HEROKU URL OR ANOTHER OTHER SERVICE -->
-    <string name="mongonodeurl">https://.......herokuapp.com/</string>
+    <!-- Use the Android emulator host for a local Node.js API. Replace with your deployed HTTPS URL when needed. -->
+    <string name="mongonodeurl">http://10.0.2.2:3003/</string>
 
     <string name="addtocalendar">Added to calendar</string>
     <string name="entryupdated">Entry updated</string>

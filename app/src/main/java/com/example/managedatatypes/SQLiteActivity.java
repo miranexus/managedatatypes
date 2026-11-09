@@ -1,7 +1,6 @@
 package com.example.managedatatypes;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -39,10 +38,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
+public class SQLiteActivity extends EdgeToEdgeActivity implements AdapterView.OnItemSelectedListener{
 
-    public static SQLiteDbHelper myDBAll;
-    public static List<SQLiteVariables> usersList;
+    public static SQLiteDatabaseHelper myDBAll;
+    public static List<SQLiteUser> usersList;
     public static int usersCountTotal;
     public static final String TAG = "SQLite";
 
@@ -71,7 +70,8 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
 
         mRecyclerView = findViewById(R.id.my_recycler_view_sqlite);
 
-        myDBAll = new SQLiteDbHelper(this);
+        myDBAll = new SQLiteDatabaseHelper(this);
+        myDBAll.getWritableDatabase();
 
         // SET UP THE SPINNER, OPTIONS CAN BE FOUND IN STRING RESOURCES
         Spinner spinnerSQLite = findViewById(R.id.spinnerSQLite);
@@ -86,29 +86,28 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         findViewById(R.id.btnSQLiteSpinner).setOnClickListener(view1 -> {
-            //String text = parent.getItemAtPosition(position).toString();
-            //Toast.makeText(parent.getContext(), text, Toast.LENGTH_SHORT).show();
-
-            if (position == 0) {
-                handleSQLiteSelectAllDialog();
-            }
-            if (position == 1) {
-                handleSQLiteSelectUserDialog();
-            }
-            if (position == 2) {
-                handleSQLiteInsertDialog();
-            }
-            if (position == 3) {
-                handleSQLiteDeleteAllDialog();
-            }
-            if (position == 4) {
-                try {
-                    handleSQLiteExportXLS();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+            Runnable[] actions = {
+                    this::handleSQLiteSelectAllDialog,
+                    this::handleSQLiteSelectUserDialog,
+                    this::handleSQLiteInsertDialog,
+                    this::handleSQLiteDeleteAllDialog,
+                    this::exportSQLiteXls
+            };
+            if (position >= 0 && position < actions.length) {
+                actions[position].run();
+            } else {
+                android.util.Log.w(TAG, "Ignoring unknown SQLite action: " + position);
             }
         });
+    }
+
+    private void exportSQLiteXls() {
+        try {
+            handleSQLiteExportXLS();
+        } catch (JSONException e) {
+            android.util.Log.e(TAG, "Unable to export SQLite data", e);
+            Toast.makeText(this, "Unable to export data", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -125,8 +124,7 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
 
         titleEdit.setText(email);
 
-        SQLiteDbHelper myDBAll;
-        myDBAll = new SQLiteDbHelper(context);
+        SQLiteDatabaseHelper myDBAll = new SQLiteDatabaseHelper(context);
 
         btnClick.setOnClickListener(view1 -> {
             myDBAll.updateUser(nameEdit.getText().toString(),
@@ -145,34 +143,10 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
     // THIS METHOD IS CALLED FROM THE SPINNER TO POPULATE THE RECYCLERVIEW WITH ALL DB ENTRIES
     private void handleSQLiteSelectAllDialog() {
 
-        // DO NOT CHANGE THE ORDER OF THESE
-        SQLiteDbHelper dbHelperMoodMon = new SQLiteDbHelper(mRecyclerView.getContext());
-        myDBAll = new SQLiteDbHelper(mRecyclerView.getContext());
-        usersList = dbHelperMoodMon.getAllUsers();
+        myDBAll = new SQLiteDatabaseHelper(mRecyclerView.getContext());
+        usersList = myDBAll.getAllUsers();
         usersCountTotal = usersList.size();
-
-        // GET THE LIST OF ALL DB ENTRIES AND ADD TO STRING BUILDER
-        StringBuilder allUsersBuild = new StringBuilder();
-        allUsersBuild.append("[");
-        for(int tb = 0; tb < usersCountTotal; tb++){
-            allUsersBuild
-                    .append("{\"date\":\"")
-                    .append(usersList.get(tb).getDateusers())
-                    .append("\",\"name\":\"")
-                    .append(usersList.get(tb).getNameusers())
-                    .append("\",\"email\":\"")
-                    .append(usersList.get(tb).getEmaiusers())
-                    .append("\",\"password\":\"")
-                    .append(usersList.get(tb).getPassusers())
-                    .append("\"},");
-        }
-        allUsersBuild.setLength(allUsersBuild.length() - 1);
-        allUsersBuild.append("]");
-
-        //System.out.println("StringBuilder All SQLite Entries = " + allUsersBuild);
-
-        jsonDataString = allUsersBuild.toString();
-        addItemsFromJSON();
+        setUsersForDisplay(usersList);
     }
 
     // THIS METHOD SELECTS AN ENTRY BASED ON THE DETAILS ENTERED IN THE ALERT DIALOG
@@ -194,36 +168,13 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
                         getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
 
-                String dateGrab = myDBAll.grabEntry(emailEdit.getText().toString(), SQLiteContract.SaveUsersTable.COLUMN_DATE);
-                String nameGrab = myDBAll.grabEntry(emailEdit.getText().toString(), SQLiteContract.SaveUsersTable.COLUMN_NAME);
-                String emaiGrab = myDBAll.grabEntry(emailEdit.getText().toString(), SQLiteContract.SaveUsersTable.COLUMN_EMAI);
-                String passGrab = myDBAll.grabEntry(emailEdit.getText().toString(), SQLiteContract.SaveUsersTable.COLUMN_PASS);
-
-                if (passwordEdit.getText().toString().equals(passGrab)) {
-
-                    // GET THE LIST OF DB ENTRIES AND ADD TO STRING BUILDER
-                    StringBuilder selectEntry = new StringBuilder();
-                    selectEntry.append("[");
-                    selectEntry
-                            .append("{\"date\":\"")
-                            .append(dateGrab)
-                            .append("\",\"name\":\"")
-                            .append(nameGrab)
-                            .append("\",\"email\":\"")
-                            .append(emaiGrab)
-                            .append("\",\"password\":\"")
-                            .append(passGrab)
-                            .append("\"},");
-                    selectEntry.setLength(selectEntry.length() - 1);
-                    selectEntry.append("]");
-
-                    //System.out.println("StringBuilder All SQLite Entries = " + selectEntry);
+                SQLiteUser user = myDBAll.getUserByEmail(emailEdit.getText().toString());
+                if (user != null && passwordEdit.getText().toString().equals(user.getPassword())) {
 
                     Toast.makeText(SQLiteActivity.this, getResources().getString(R.string.entryfound),
                             Toast.LENGTH_LONG).show();
 
-                    jsonDataString = selectEntry.toString();
-                    addItemsFromJSON();
+                    setUsersForDisplay(Arrays.asList(user));
                 } else {
                     Toast.makeText(SQLiteActivity.this,
                             getResources().getString(R.string.wrongcred), Toast.LENGTH_LONG).show();
@@ -233,34 +184,30 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
     }
 
     // THIS METHOD REFRESHES THE RECYCLERVIEW TO DISPLAY AN ENTRY WHEN IT IS INSERTED
-    public static void selectRefeshSQLite(String email, String password){
+    public static void refreshSQLiteEntry(String email, String password){
 
-        String dateGrab = myDBAll.grabEntry(email, SQLiteContract.SaveUsersTable.COLUMN_DATE);
-        String nameGrab = myDBAll.grabEntry(email, SQLiteContract.SaveUsersTable.COLUMN_NAME);
-        String emaiGrab = myDBAll.grabEntry(email, SQLiteContract.SaveUsersTable.COLUMN_EMAI);
-        String passGrab = myDBAll.grabEntry(email, SQLiteContract.SaveUsersTable.COLUMN_PASS);
-
-        if (password.equals(passGrab)) {
-
-            // GET THE LIST OF DB ENTRIES AND ADD TO STRING BUILDER
-            StringBuilder selectEntry = new StringBuilder();
-            selectEntry.append("[");
-            selectEntry
-                    .append("{\"date\":\"")
-                    .append(dateGrab)
-                    .append("\",\"name\":\"")
-                    .append(nameGrab)
-                    .append("\",\"email\":\"")
-                    .append(emaiGrab)
-                    .append("\",\"password\":\"")
-                    .append(passGrab)
-                    .append("\"},");
-            selectEntry.setLength(selectEntry.length() - 1);
-            selectEntry.append("]");
-
-            jsonDataString = selectEntry.toString();
-            addItemsFromJSON();
+        SQLiteUser user = myDBAll.getUserByEmail(email);
+        if (user != null && password.equals(user.getPassword())) {
+            setUsersForDisplay(Arrays.asList(user));
         }
+    }
+
+    private static void setUsersForDisplay(List<SQLiteUser> users) {
+        JSONArray jsonArray = new JSONArray();
+        for (SQLiteUser user : users) {
+            JSONObject item = new JSONObject();
+            try {
+                item.put("date", user.getDate());
+                item.put("name", user.getName());
+                item.put("email", user.getEmail());
+                item.put("password", user.getPassword());
+                jsonArray.put(item);
+            } catch (JSONException e) {
+                Log.e(TAG, "Unable to display SQLite user", e);
+            }
+        }
+        jsonDataString = jsonArray.toString();
+        addItemsFromJSON();
     }
 
     // THIS METHOD INSERTS AN INDIVIDUAL ENTRY
@@ -268,9 +215,8 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
 
         // DO NOT CHANGE THE ORDER OF THESE
 
-        SQLiteDbHelper dbHelperMoodMon = new SQLiteDbHelper(this);
-        myDBAll = new SQLiteDbHelper(this);
-        usersList = dbHelperMoodMon.getAllUsers();
+        myDBAll = new SQLiteDatabaseHelper(this);
+        usersList = myDBAll.getAllUsers();
         usersCountTotal = usersList.size();
 
         View view = getLayoutInflater().inflate(R.layout.dialog_insert_activity, null);
@@ -292,9 +238,7 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
                         getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
 
-                String emaiGrab = myDBAll.grabEntry(emailEdit.getText().toString(), SQLiteContract.SaveUsersTable.COLUMN_EMAI);
-
-                if (emailEdit.getText().toString().equals(emaiGrab)) {
+                if (myDBAll.getUserByEmail(emailEdit.getText().toString()) != null) {
 
                     Toast.makeText(SQLiteActivity.this,
                             getResources().getString(R.string.alreadyexist), Toast.LENGTH_LONG).show();
@@ -303,7 +247,7 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
                     long timeStampLong = System.currentTimeMillis()/1000;
                     String timeStamp = Long.toString(timeStampLong);
 
-                    myDBAll.insertLogFill(
+                    myDBAll.insertUser(
                             timeStamp,
                             nameEdit.getText().toString(),
                             emailEdit.getText().toString(),
@@ -313,7 +257,7 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
                             getResources().getString(R.string.entryinsert), Toast.LENGTH_LONG).show();
 
                     // UPDATE THE RECYCLER VIEW WITH THE CHANGES
-                    selectRefeshSQLite(emailEdit.getText().toString(),passwordEdit.getText().toString());
+                    refreshSQLiteEntry(emailEdit.getText().toString(),passwordEdit.getText().toString());
 
                 }
             }
@@ -327,7 +271,9 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
                 .setMessage("Delete all entries?" + "\n\n" + "Long click on list items to delete individual users")
                 .setCancelable(true)
                 .setPositiveButton("Yes", (dialog, id) -> {
-                    myDBAll.deleteDb();
+                    myDBAll.deleteAllUsers();
+                    jsonDataString = "[]";
+                    addItemsFromJSON();
                     Toast.makeText(SQLiteActivity.this, "All entries Deleted",
                             Toast.LENGTH_LONG).show();
                 })
@@ -346,6 +292,7 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(mRecyclerView.getContext());
             mRecyclerView.setLayoutManager(layoutManager);
             RecyclerView.Adapter mAdapter = new RecyclerAdapter(mRecyclerView.getContext(), viewItems);
+            mRecyclerView.setAdapter(mAdapter);
 
             for (int i=0; i<jsonArray.length(); ++i) {
                 JSONObject itemObj = jsonArray.getJSONObject(i);
@@ -359,7 +306,6 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
                                                 email,
                                                 password);
                 viewItems.add(variables);
-                mRecyclerView.setAdapter(mAdapter);
             }
 
         } catch (JSONException e) {
@@ -370,16 +316,12 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
     // THIS METHOD SAVES CODE TO CREATE NAME, EMAIL, AND PASSWORD ARRAYS IN THE EXPORT XLS METHOD
     private List<String> jsonBuilder(String column) throws JSONException {
         JSONArray jsonArray = new JSONArray(jsonDataString);
-        StringBuilder usersBuild = new StringBuilder();
+        List<String> values = new ArrayList<>();
         for (int ub = 0; ub < jsonArray.length(); ub++) {
             JSONObject itemObj = jsonArray.getJSONObject(ub);
-            usersBuild
-                    .append(itemObj.getString(column))
-                    .append(",");
+            values.add(itemObj.getString(column));
         }
-        usersBuild.setLength(usersBuild.length() - 1);
-        List<String> nameValues = new ArrayList<>(Arrays.asList(usersBuild.toString().split(",")));
-        return nameValues;
+        return values;
     }
 
     // EXPORT ALL DATA AS XLS FILE
@@ -449,31 +391,17 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
 
         JSONArray jsonArray = new JSONArray(jsonDataString);
 
-        // GET THE LIST OF ALL DATE ENTRIES AND ADD TO STRING BUILDER
-        StringBuilder dateUsersBuild = new StringBuilder();
+        List<String> dateValues = new ArrayList<>();
+        List<String> timeValues = new ArrayList<>();
         for(int dj = 0; dj < jsonArray.length(); dj++){
-            JSONObject dateitemObj = jsonArray.getJSONObject(dj);
-            dateUsersBuild
-                    .append(MainActivity.formatDate(dateitemObj.getString("date"),"dd/MM/yyyy"))
-                    .append(",");
+            String date = jsonArray.getJSONObject(dj).getString("date");
+            dateValues.add(MainActivity.formatDate(date,"dd/MM/yyyy"));
+            timeValues.add(MainActivity.formatDate(date,"HH:mm:ss"));
         }
-        dateUsersBuild.setLength(dateUsersBuild.length() - 1);
-
-        // GET THE LIST OF ALL TIME ENTRIES AND ADD TO STRING BUILDER
-        StringBuilder timeUsersBuild = new StringBuilder();
-        for(int dj = 0; dj < jsonArray.length(); dj++){
-            JSONObject timeitemObj = jsonArray.getJSONObject(dj);
-            timeUsersBuild
-                    .append(MainActivity.formatDate(timeitemObj.getString("date"),"HH:mm:ss"))
-                    .append(",");
-        }
-        timeUsersBuild.setLength(timeUsersBuild.length() - 1);
 
         List<String> nameValues = jsonBuilder("name");
         List<String> emaiValues = jsonBuilder("email");
         List<String> passValues = jsonBuilder("password");
-        List<String> dateValues = new ArrayList<>(Arrays.asList(dateUsersBuild.toString().split(",")));
-        List<String> timeValues = new ArrayList<>(Arrays.asList(timeUsersBuild.toString().split(",")));
 
         // SET UP AND EXPORT THE DATA
         for (int av = 0; av < dateValues.size(); av ++) {
@@ -506,7 +434,7 @@ public class SQLiteActivity extends AppCompatActivity implements AdapterView.OnI
             exWorkBook.write(outputStream);
             //Toast.makeText(getApplicationContext(),"Export Successful",Toast.LENGTH_LONG).show();
             Context context = getApplicationContext();
-            Uri path = FileProvider.getUriForFile(context, MainActivity.PACKAGE_NAME + ".fileprovider", file);
+            Uri path = FileProvider.getUriForFile(context, MainActivity.packageName + ".fileprovider", file);
             Intent fileIntent = new Intent(Intent.ACTION_SEND);
             fileIntent.setType("text/xls");
             fileIntent.putExtra(Intent.EXTRA_SUBJECT, fileName);

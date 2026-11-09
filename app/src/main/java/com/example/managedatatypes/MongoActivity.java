@@ -1,7 +1,6 @@
 package com.example.managedatatypes;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -43,12 +42,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MongoActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
+public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnItemSelectedListener{
 
     public static final String TAG = "Mongo";
 
@@ -73,7 +73,8 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
         setSupportActionBar(toolbar);
 
         // SET UP THE BASE URL DEPENDING ON WHICH ACTIVITY WE ARE IN, URL IN STRING RESOURCES
-        MainActivity.BASE_URL = getResources().getString(R.string.mongonodeurl);
+        MainActivity.baseUrl = getResources().getString(R.string.mongonodeurl);
+        wakeUpHerokuServerIfConfigured();
 
         // SET UP A TAG TO REFERENCE THE ACTIVITY FROM THE RECYCLER ADAPTER
         MainActivity.recycleDelete = getResources().getString(R.string.MongoActivityRecycle);
@@ -89,31 +90,61 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
         spinnerMongo.setOnItemSelectedListener(this);
     }
 
+    private void wakeUpHerokuServerIfConfigured() {
+        Uri serverUri = Uri.parse(MainActivity.baseUrl);
+        String host = serverUri.getHost();
+        if ("https".equalsIgnoreCase(serverUri.getScheme())
+                && host != null
+                && host.toLowerCase(Locale.ROOT).endsWith(".herokuapp.com")) {
+            wakeUpMongoServer();
+        }
+    }
+
+    // Heroku may suspend an idle app; this health check is only used for configured Heroku URLs.
+    private void wakeUpMongoServer() {
+        InterfaceRetrofit api = MainActivity.retrofit.create(InterfaceRetrofit.class);
+        Call<List<MongoVariables>> call = api.checkExistsMongo();
+        call.enqueue(new Callback<List<MongoVariables>>() {
+            @Override
+            public void onResponse(Call<List<MongoVariables>> call, Response<List<MongoVariables>> response) {
+                if (!response.isSuccessful()) {
+                    Log.w(TAG, "Heroku wake-up check returned HTTP " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<MongoVariables>> call, Throwable error) {
+                Log.w(TAG, "Heroku wake-up check failed", error);
+            }
+        });
+    }
+
     // SET UP THE ONCLICKLISTENER FOR THE SPINNER
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         findViewById(R.id.btnMongoSpinner).setOnClickListener(view1 -> {
-
-            if (position == 0) {
-                handleMongoSelectAllDialog();
-            }
-            if (position == 1) {
-                handleMongoSelectUserDialog();
-            }
-            if (position == 2) {
-                handleMongoInsertDialog();
-            }
-            if (position == 3) {
-                handleMongoDeleteAllDialog();
-            }
-            if (position == 4) {
-                try {
-                    handleMongoExportXLS();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+            Runnable[] actions = {
+                    this::handleMongoSelectAllDialog,
+                    this::handleMongoSelectUserDialog,
+                    this::handleMongoInsertDialog,
+                    this::handleMongoDeleteAllDialog,
+                    this::exportMongoXls
+            };
+            if (position >= 0 && position < actions.length) {
+                actions[position].run();
+            } else {
+                android.util.Log.w(TAG, "Ignoring unknown MongoDB action: " + position);
             }
         });
+    }
+
+    private void exportMongoXls() {
+        try {
+            handleMongoExportXLS();
+        } catch (JSONException e) {
+            android.util.Log.e(TAG, "Unable to export MongoDB data", e);
+            Toast.makeText(this, "Unable to export data", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -121,14 +152,14 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
     }
 
     // THIS METHOD IS CALLED FROM THE RECYCLER VIEW WHEN CLICKED TO UPDATE ENTRY
-    public static void handleMongoUpdateDialog(View view, Context context, String emai) {
+    public static void handleMongoUpdateDialog(View view, Context context, String email) {
 
         Button btnClick = view.findViewById(R.id.btnUpdateDial);
         final EditText nameEdit = view.findViewById(R.id.nameUpdateDial);
         final EditText passwordEdit = view.findViewById(R.id.passwordUpdateDial);
         final TextView titleEdit = view.findViewById(R.id.titleUpdateDial);
 
-        titleEdit.setText(emai);
+        titleEdit.setText(email);
 
         btnClick.setOnClickListener(view1 -> {
 
@@ -145,7 +176,7 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
 
                 //map.put("date", timeStamp);
                 map.put("name", nameEdit.getText().toString());
-                map.put("email", emai);
+                map.put("email", email);
                 map.put("password", passwordEdit.getText().toString());
 
                 Call<Void> call = MainActivity.interfaceRetrofit.updateMongo(map);
@@ -181,14 +212,14 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
     private void handleMongoSelectAllDialog() {
 
         // WITH THE INSTANCE OF RETROFIT "retrofit "WE CAN CREATE OUR "RetrofitInterface"
-        InterfaceRetrofit InterfaceRetrofit = MainActivity.retrofit.create(InterfaceRetrofit.class);
+        InterfaceRetrofit api = MainActivity.retrofit.create(InterfaceRetrofit.class);
 
         // TO EXECUTE OUR NETWORK REQUEST WE USE THE "Call" OBJECT FROM EARLIER
         // WE INTRODUCE A "Call" OBJECT - "Call<T> (retrofit)"
         // WE ADD "RetrofitInterface" AND WE CAN CALL OUR "getPosts()" METHOD IN "InterfaceRetrofit.java"
         // RETROFIT CREATES THE IMPLEMENTATION FOR THIS METHOD
         // THEN WE EXECUTE THIS CALL AND GET OUR RESPONSE BACK
-        Call<List<MongoVariables>> call = InterfaceRetrofit.selectAllMongo();
+        Call<List<MongoVariables>> call = api.selectAllMongo();
 
         // WE ADD "call.enqueue" BUT WE DON'T ADD "call.execute" BECAUSE THIS METHOD WILL RUN SYNCHRONOUSLY
         // THIS MEANS IT WILL BE EXECUTED ON WHICHEVER THREAD WE ARE ON AND WE ARE ON THE MAIN THREAD
@@ -322,7 +353,7 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
     }
 
     // THIS METHOD REFRESHES THE RECYCLERVIEW TO DISPLAY AN ENTRY WHEN IT IS INSERTED
-    public static void selectRefeshMongo(String email, String password){
+    public static void refreshMongoEntry(String email, String password) {
 
         HashMap<String, String> map = new HashMap<>();
         map.put("email", email);
@@ -406,7 +437,7 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
                             Toast.makeText(MongoActivity.this,
                                     getResources().getString(R.string.entryinsert), Toast.LENGTH_LONG).show();
                             // UPDATE THE RECYCLER VIEW WITH THE CHANGES
-                            selectRefeshMongo(emailEdit.getText().toString(),passwordEdit.getText().toString());
+                            refreshMongoEntry(emailEdit.getText().toString(), passwordEdit.getText().toString());
                         } else if (response.code() == 400) {
                             Toast.makeText(MongoActivity.this,
                                     getResources().getString(R.string.alreadyexist), Toast.LENGTH_LONG).show();
@@ -431,8 +462,8 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
                 .setCancelable(true)
                 .setPositiveButton("Yes", (dialog, id) -> {
 
-                    InterfaceRetrofit InterfaceRetrofit = MainActivity.retrofit.create(InterfaceRetrofit.class);
-                    Call<Void> call = InterfaceRetrofit.deleteAllMongo();
+                    InterfaceRetrofit api = MainActivity.retrofit.create(InterfaceRetrofit.class);
+                    Call<Void> call = api.deleteAllMongo();
 
                     call.enqueue(new Callback<Void>() {
                         @Override
@@ -653,7 +684,7 @@ public class MongoActivity extends AppCompatActivity implements AdapterView.OnIt
             exWorkBook.write(outputStream);
             //Toast.makeText(getApplicationContext(),"Export Successful",Toast.LENGTH_LONG).show();
             Context context = getApplicationContext();
-            Uri path = FileProvider.getUriForFile(context, MainActivity.PACKAGE_NAME + ".fileprovider", file);
+            Uri path = FileProvider.getUriForFile(context, MainActivity.packageName + ".fileprovider", file);
             Intent fileIntent = new Intent(Intent.ACTION_SEND);
             fileIntent.setType("text/xls");
             fileIntent.putExtra(Intent.EXTRA_SUBJECT, fileName);

@@ -1,7 +1,6 @@
 package com.example.managedatatypes;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -49,7 +48,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
+public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.OnItemSelectedListener {
 
     private static final String TAG = "MySQLPHP";
 
@@ -69,7 +68,7 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
         public static Retrofit getRetrofitInstance() {
             if (retrofit == null) {
                 retrofit = new Retrofit.Builder()
-                        .baseUrl(MainActivity.BASE_URL)
+                        .baseUrl(MainActivity.baseUrl)
                         .addConverterFactory(GsonConverterFactory.create())
                         .build();
             }
@@ -87,7 +86,7 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
         setSupportActionBar(toolbar);
 
         // SET UP THE BASE URL DEPENDING ON WHICH ACTIVITY WE ARE IN, URL IN STRING RESOURCES
-        MainActivity.BASE_URL = getResources().getString(R.string.mysqlphpurl);
+        MainActivity.baseUrl = getResources().getString(R.string.mysqlphpurl);
 
         // SET UP A TAG TO REFERENCE THE ACTIVITY FROM THE RECYCLER ADAPTER
         MainActivity.recycleDelete = getResources().getString(R.string.MySQLPHPActivityRecycle);
@@ -108,27 +107,28 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         findViewById(R.id.btnMySQLPHPSpinner).setOnClickListener(view1 -> {
-
-            if (position == 0) {
-                handleMySQLPHPSelectAllDialog(getApplicationContext());
-            }
-            if (position == 1) {
-                handleMySQLPHPSelectUserDialog();
-            }
-            if (position == 2) {
-                handleMySQLPHPInsertDialog();
-            }
-            if (position == 3) {
-                handleMySQLPHPDeleteAllDialog();
-            }
-            if (position == 4) {
-                try {
-                    handleMySQLPHPExportXLS();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+            Runnable[] actions = {
+                    () -> handleMySQLPHPSelectAllDialog(getApplicationContext()),
+                    this::handleMySQLPHPSelectUserDialog,
+                    this::handleMySQLPHPInsertDialog,
+                    this::handleMySQLPHPDeleteAllDialog,
+                    this::exportMySQLPHPXls
+            };
+            if (position >= 0 && position < actions.length) {
+                actions[position].run();
+            } else {
+                android.util.Log.w(TAG, "Ignoring unknown PHP/MySQL action: " + position);
             }
         });
+    }
+
+    private void exportMySQLPHPXls() {
+        try {
+            handleMySQLPHPExportXLS();
+        } catch (JSONException e) {
+            android.util.Log.e(TAG, "Unable to export PHP/MySQL data", e);
+            Toast.makeText(this, "Unable to export data", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -136,14 +136,14 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
     }
 
     // THIS METHOD IS CALLED FROM THE RECYCLER VIEW WHEN CLICKED TO UPDATE ENTRY
-    public static void handleMySQLPHPUpdateDialog(View view, Context context, String emai) {
+    public static void handleMySQLPHPUpdateDialog(View view, Context context, String email) {
 
         Button btnClick = view.findViewById(R.id.btnUpdateDial);
         final EditText nameEdit = view.findViewById(R.id.nameUpdateDial);
         final EditText passwordEdit = view.findViewById(R.id.passwordUpdateDial);
         final TextView titleEdit = view.findViewById(R.id.titleUpdateDial);
 
-        titleEdit.setText(emai);
+        titleEdit.setText(email);
 
         btnClick.setOnClickListener(view1 -> {
 
@@ -156,9 +156,9 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
                 //long timeStampLong = System.currentTimeMillis()/1000;
                 //String timeStamp = Long.toString(timeStampLong);
 
-                InterfaceRetrofit myAPIService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-                Call<Void> call = myAPIService.updateMySQLPHP(nameEdit.getText().toString(),
-                                                              emai,
+                InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+                Call<Void> call = apiService.updateMySQLPHP(nameEdit.getText().toString(),
+                                                              email,
                                                               passwordEdit.getText().toString());
 
                 call.enqueue(new Callback<Void>() {
@@ -188,9 +188,8 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
     // THIS METHOD IS CALLED FROM THE SPINNER TO POPULATE THE RECYCLERVIEW WITH ALL DB ENTRIES
     private void handleMySQLPHPSelectAllDialog(Context context) {
 
-        InterfaceRetrofit myAPIService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-
-        Call<List<MySQLPHPVariables>> call = myAPIService.selectAllMySQLPHP();
+        InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+        Call<List<MySQLPHPVariables>> call = apiService.selectAllMySQLPHP();
         call.enqueue(new Callback<List<MySQLPHPVariables>>() {
 
             @Override
@@ -231,8 +230,8 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
                         getResources().getString(R.string.fillallfields),Toast.LENGTH_LONG).show();
             } else {
 
-                InterfaceRetrofit myAPIService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-                Call<MongoVariables> call = myAPIService.selectUserMySQLPHP(emailEdit.getText().toString(),
+                InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+                Call<MongoVariables> call = apiService.selectUserMySQLPHP(emailEdit.getText().toString(),
                         passwordEdit.getText().toString());
 
                 call.enqueue(new Callback<MongoVariables>() {
@@ -267,10 +266,10 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
     }
 
     // THIS METHOD REFRESHES THE RECYCLERVIEW TO DISPLAY AN ENTRY WHEN IT IS INSERTED
-    public static void selectRefeshMySQLPP(String email, String password){
+    public static void refreshMySQLPHPEntry(String email, String password) {
 
-        InterfaceRetrofit myAPIService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-        Call<MongoVariables> call = myAPIService.selectUserMySQLPHP(email,password);
+        InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+        Call<MongoVariables> call = apiService.selectUserMySQLPHP(email,password);
 
         call.enqueue(new Callback<MongoVariables>() {
 
@@ -324,8 +323,8 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
                 long timeStampLong = System.currentTimeMillis()/1000;
                 String timeStamp = Long.toString(timeStampLong);
 
-                InterfaceRetrofit myAPIService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-                Call<MongoVariables> call = myAPIService.insertMySQLPHP(timeStamp,
+                InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+                Call<MongoVariables> call = apiService.insertMySQLPHP(timeStamp,
                         nameEdit.getText().toString(),
                         emailEdit.getText().toString(),
                         passwordEdit.getText().toString());
@@ -351,7 +350,7 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
                                     Toast.LENGTH_LONG).show();
 
                             // UPDATE THE RECYCLER VIEW WITH THE CHANGES
-                            selectRefeshMySQLPP(emailEdit.getText().toString(),passwordEdit.getText().toString());
+                            refreshMySQLPHPEntry(emailEdit.getText().toString(), passwordEdit.getText().toString());
                         }
                     }
 
@@ -372,8 +371,8 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
                 .setCancelable(true)
                 .setPositiveButton("Yes", (dialog, id) -> {
 
-                    InterfaceRetrofit myAPIService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-                    Call<Void> call = myAPIService.deleteAllMySQLPHP();
+                    InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+                    Call<Void> call = apiService.deleteAllMySQLPHP();
 
                     call.enqueue(new Callback<Void>() {
                         @Override
@@ -397,8 +396,8 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
     // THIS METHOD DELETED AN ENTRY BASED ON THE UNIQUE EMAIL KEY
     public static void handleMySQLPHPDeleteEmailDialog(String name, String email, String password) {
 
-        InterfaceRetrofit myAPIService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
-        Call<Void> call = myAPIService.deleteUserMySQLPHP(name, email, password);
+        InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
+        Call<Void> call = apiService.deleteUserMySQLPHP(name, email, password);
 
         call.enqueue(new Callback<Void>() {
 
@@ -588,7 +587,7 @@ public class MySQLPHPActivity extends AppCompatActivity implements AdapterView.O
             exWorkBook.write(outputStream);
             //Toast.makeText(getApplicationContext(),"Export Successful",Toast.LENGTH_LONG).show();
             Context context = getApplicationContext();
-            Uri path = FileProvider.getUriForFile(context, MainActivity.PACKAGE_NAME + ".fileprovider", file);
+            Uri path = FileProvider.getUriForFile(context, MainActivity.packageName + ".fileprovider", file);
             Intent fileIntent = new Intent(Intent.ACTION_SEND);
             fileIntent.setType("text/xls");
             fileIntent.putExtra(Intent.EXTRA_SUBJECT, fileName);

@@ -18,7 +18,7 @@ public class MongoVariables {
     // WITH RETROFIT WE WILL LATER RETRIEVE THE POST ARRAY FROM THE REST API
     // THE GSON CONVERTER WILL TURN THESE POST JSON OBJECTS INTO POST JAVA OBJECTS
 
-    public String getdate() {
+    public String getDate() {
         return date;
     }
     public String getName() {
@@ -32,7 +32,6 @@ public class MongoVariables {
     }
 
 }
-
 
 
 
