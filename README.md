@@ -70,6 +70,7 @@ Set `mysqlphpurl` in `strings.xml` to the base URL that contains the
 ## Notes
 
 This educational app is not a production authentication service: account
-passwords are stored and exported as plain text. The calendar widget and
-Apache POI `.xls` export use legacy Android-compatible libraries; evaluate
-them separately before upgrading to avoid changing those features.
+passwords are stored and exported as plain text. The calendar uses an
+AndroidX-compatible fork of CompactCalendarView; `.xls` export uses legacy
+Android-compatible Apache POI libraries. Evaluate library upgrades separately
+to avoid changing those features.

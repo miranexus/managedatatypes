@@ -1,5 +1,6 @@
 package com.example.managedatatypes;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
@@ -147,8 +148,8 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (nameEdit.getText().toString().equals("") ||
-                    passwordEdit.getText().toString().equals("")) {
+            if (nameEdit.getText().toString().isEmpty() ||
+                    passwordEdit.getText().toString().isEmpty()) {
                 Toast.makeText(context,
                         context.getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -161,24 +162,24 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
                                                               email,
                                                               passwordEdit.getText().toString());
 
-                call.enqueue(new Callback<Void>() {
+                call.enqueue(new Callback<>() {
                     @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
+                    public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 
-                        if(response.isSuccessful()){
-                            Toast.makeText(context,context.getResources().getString(R.string.entryupdated), Toast.LENGTH_LONG).show();
+                        if (response.isSuccessful()) {
+                            Toast.makeText(context, context.getResources().getString(R.string.entryupdated), Toast.LENGTH_LONG).show();
 
                             // UPDATE THE RECYCLER VIEW WITH THE CHANGES
                             RecyclerAdapter.nameViewUpdate.setText(nameEdit.getText().toString());
                             RecyclerAdapter.passwordViewUpdate.setText(passwordEdit.getText().toString());
                         } else {
-                            Toast.makeText(context,context.getResources().getString(R.string.failed), Toast.LENGTH_LONG).show();
+                            Toast.makeText(context, context.getResources().getString(R.string.failed), Toast.LENGTH_LONG).show();
                         }
                     }
 
                     @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
-                        Toast.makeText(context,t.getLocalizedMessage(),Toast.LENGTH_SHORT).show();
+                    public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
+                        Toast.makeText(context, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -190,22 +191,22 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
 
         InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
         Call<List<MySQLPHPVariables>> call = apiService.selectAllMySQLPHP();
-        call.enqueue(new Callback<List<MySQLPHPVariables>>() {
+        call.enqueue(new Callback<>() {
 
             @Override
-            public void onResponse(Call<List<MySQLPHPVariables>> call, Response<List<MySQLPHPVariables>> response) {
+            public void onResponse(@NonNull Call<List<MySQLPHPVariables>> call, @NonNull Response<List<MySQLPHPVariables>> response) {
 
                 List<MySQLPHPVariables> posts = response.body();
 
                 Gson gson = new Gson();
-                String json = gson.toJson(posts);
                 //System.out.println("JSON sent back from Node.js = " + json);
 
-                jsonDataString = json;
+                jsonDataString = gson.toJson(posts);
                 addItemsFromJSON();
             }
+
             @Override
-            public void onFailure(Call<List<MySQLPHPVariables>> call, Throwable throwable) {
+            public void onFailure(@NonNull Call<List<MySQLPHPVariables>> call, @NonNull Throwable throwable) {
                 Toast.makeText(context, throwable.getMessage(), Toast.LENGTH_LONG).show();
                 System.out.println(throwable.getMessage());
             }
@@ -225,7 +226,7 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (emailEdit.getText().toString().equals("") || passwordEdit.getText().toString().equals("")){
+            if (emailEdit.getText().toString().isEmpty() || passwordEdit.getText().toString().isEmpty()){
                 Toast.makeText(MySQLPHPActivity.this,
                         getResources().getString(R.string.fillallfields),Toast.LENGTH_LONG).show();
             } else {
@@ -234,29 +235,29 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
                 Call<MongoVariables> call = apiService.selectUserMySQLPHP(emailEdit.getText().toString(),
                         passwordEdit.getText().toString());
 
-                call.enqueue(new Callback<MongoVariables>() {
+                call.enqueue(new Callback<>() {
 
                     @Override
-                    public void onResponse(Call<MongoVariables> call, Response<MongoVariables> response) {
+                    public void onResponse(@NonNull Call<MongoVariables> call, @NonNull Response<MongoVariables> response) {
 
                         MongoVariables result = response.body();
                         Gson gson = new Gson();
                         String json = gson.toJson(result);
                         //System.out.println("JSON sent back from Node.js = " + json);
 
-                        if(json.equals("{}")){
-                            Toast.makeText(MySQLPHPActivity.this,getResources().getString(R.string.wrongcred),
+                        if (json.equals("{}")) {
+                            Toast.makeText(MySQLPHPActivity.this, getResources().getString(R.string.wrongcred),
                                     Toast.LENGTH_LONG).show();
                         } else {
                             jsonDataString = "[" + json + "]";
                             addItemsFromJSON();
-                            Toast.makeText(MySQLPHPActivity.this,getResources().getString(R.string.entryfound),
+                            Toast.makeText(MySQLPHPActivity.this, getResources().getString(R.string.entryfound),
                                     Toast.LENGTH_LONG).show();
                         }
                     }
 
                     @Override
-                    public void onFailure(Call<MongoVariables> call, Throwable t) {
+                    public void onFailure(@NonNull Call<MongoVariables> call, @NonNull Throwable t) {
                         Toast.makeText(MySQLPHPActivity.this, t.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
@@ -271,17 +272,17 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
         InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
         Call<MongoVariables> call = apiService.selectUserMySQLPHP(email,password);
 
-        call.enqueue(new Callback<MongoVariables>() {
+        call.enqueue(new Callback<>() {
 
             @Override
-            public void onResponse(Call<MongoVariables> call, Response<MongoVariables> response) {
+            public void onResponse(@NonNull Call<MongoVariables> call, @NonNull Response<MongoVariables> response) {
 
                 MongoVariables result = response.body();
                 Gson gson = new Gson();
                 String json = gson.toJson(result);
                 //System.out.println("JSON sent back from Node.js = " + json);
 
-                if(json.equals("{}")){
+                if (json.equals("{}")) {
                     Toast.makeText(mRecyclerView.getContext(), mRecyclerView.getContext().getResources().getString(R.string.wrongcred),
                             Toast.LENGTH_LONG).show();
                 } else {
@@ -291,7 +292,7 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
             }
 
             @Override
-            public void onFailure(Call<MongoVariables> call, Throwable t) {
+            public void onFailure(@NonNull Call<MongoVariables> call, @NonNull Throwable t) {
                 Toast.makeText(mRecyclerView.getContext(), t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
@@ -313,9 +314,9 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (nameEdit.getText().toString().equals("") ||
-                    emailEdit.getText().toString().equals("") ||
-                    passwordEdit.getText().toString().equals("")) {
+            if (nameEdit.getText().toString().isEmpty() ||
+                    emailEdit.getText().toString().isEmpty() ||
+                    passwordEdit.getText().toString().isEmpty()) {
                 Toast.makeText(MySQLPHPActivity.this,
                         getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -329,24 +330,24 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
                         emailEdit.getText().toString(),
                         passwordEdit.getText().toString());
 
-                call.enqueue(new Callback<MongoVariables>() {
+                call.enqueue(new Callback<>() {
                     @Override
-                    public void onResponse(Call<MongoVariables> call, Response<MongoVariables> response) {
+                    public void onResponse(@NonNull Call<MongoVariables> call, @NonNull Response<MongoVariables> response) {
 
                         MongoVariables result = response.body();
                         Gson gson = new Gson();
                         String json = gson.toJson(result);
                         //System.out.println("JSON sent back from Node.js = " + json);
 
-                        String newstring = json.replace("{\"email\":\"","").replace("\"}","");
+                        String newstring = json.replace("{\"email\":\"", "").replace("\"}", "");
 
-                        if(newstring.equals(emailEdit.getText().toString())){
-                            Toast.makeText(MySQLPHPActivity.this,getResources().getString(R.string.alreadyexist),
+                        if (newstring.equals(emailEdit.getText().toString())) {
+                            Toast.makeText(MySQLPHPActivity.this, getResources().getString(R.string.alreadyexist),
                                     Toast.LENGTH_LONG).show();
                         } else {
                             jsonDataString = "[" + json + "]";
                             addItemsFromJSON();
-                            Toast.makeText(MySQLPHPActivity.this,getResources().getString(R.string.entryinsert),
+                            Toast.makeText(MySQLPHPActivity.this, getResources().getString(R.string.entryinsert),
                                     Toast.LENGTH_LONG).show();
 
                             // UPDATE THE RECYCLER VIEW WITH THE CHANGES
@@ -355,8 +356,8 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
                     }
 
                     @Override
-                    public void onFailure(Call<MongoVariables> call, Throwable t) {
-                        Toast.makeText(MySQLPHPActivity.this,t.getLocalizedMessage(),Toast.LENGTH_SHORT).show();
+                    public void onFailure(@NonNull Call<MongoVariables> call, @NonNull Throwable t) {
+                        Toast.makeText(MySQLPHPActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             }
@@ -367,23 +368,26 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
     private void handleMySQLPHPDeleteAllDialog() {
 
         new android.app.AlertDialog.Builder(MySQLPHPActivity.this)
-                .setMessage("Delete all entries?" + "\n\n" + "Long click on list items to delete individual users")
+                .setMessage("""
+                        Delete all entries?
+
+                        Long click on list items to delete individual users""")
                 .setCancelable(true)
                 .setPositiveButton("Yes", (dialog, id) -> {
 
                     InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
                     Call<Void> call = apiService.deleteAllMySQLPHP();
 
-                    call.enqueue(new Callback<Void>() {
+                    call.enqueue(new Callback<>() {
                         @Override
-                        public void onResponse(Call<Void> call, Response<Void> response) {
+                        public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 
                             Toast.makeText(MySQLPHPActivity.this, "All entries deleted",
                                     Toast.LENGTH_LONG).show();
                         }
 
                         @Override
-                        public void onFailure(Call<Void> call, Throwable t) {
+                        public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                             Toast.makeText(MySQLPHPActivity.this, t.getMessage(),
                                     Toast.LENGTH_LONG).show();
                         }
@@ -399,17 +403,17 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
         InterfaceRetrofit apiService = RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
         Call<Void> call = apiService.deleteUserMySQLPHP(name, email, password);
 
-        call.enqueue(new Callback<Void>() {
+        call.enqueue(new Callback<>() {
 
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 
                 Toast.makeText(RecyclerAdapter.cText, RecyclerAdapter.cText.getResources().getString(R.string.entrydelete),
                         Toast.LENGTH_LONG).show();
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 Toast.makeText(RecyclerAdapter.cText, t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
@@ -459,8 +463,7 @@ public class MySQLPHPActivity extends EdgeToEdgeActivity implements AdapterView.
                     .append(",");
         }
         usersBuild.setLength(usersBuild.length() - 1);
-        List<String> nameValues = new ArrayList<>(Arrays.asList(usersBuild.toString().split(",")));
-        return nameValues;
+        return new ArrayList<>(Arrays.asList(usersBuild.toString().split(",")));
     }
 
     // EXPORT ALL DATA AS XLS FILE

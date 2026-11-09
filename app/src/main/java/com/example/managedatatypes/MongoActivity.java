@@ -1,5 +1,6 @@
 package com.example.managedatatypes;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
@@ -104,16 +105,16 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
     private void wakeUpMongoServer() {
         InterfaceRetrofit api = MainActivity.retrofit.create(InterfaceRetrofit.class);
         Call<List<MongoVariables>> call = api.checkExistsMongo();
-        call.enqueue(new Callback<List<MongoVariables>>() {
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<List<MongoVariables>> call, Response<List<MongoVariables>> response) {
+            public void onResponse(@NonNull Call<List<MongoVariables>> call, @NonNull Response<List<MongoVariables>> response) {
                 if (!response.isSuccessful()) {
                     Log.w(TAG, "Heroku wake-up check returned HTTP " + response.code());
                 }
             }
 
             @Override
-            public void onFailure(Call<List<MongoVariables>> call, Throwable error) {
+            public void onFailure(@NonNull Call<List<MongoVariables>> call, @NonNull Throwable error) {
                 Log.w(TAG, "Heroku wake-up check failed", error);
             }
         });
@@ -163,8 +164,8 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (nameEdit.getText().toString().equals("") ||
-                    passwordEdit.getText().toString().equals("")) {
+            if (nameEdit.getText().toString().isEmpty() ||
+                    passwordEdit.getText().toString().isEmpty()) {
                 Toast.makeText(context,
                         context.getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -181,9 +182,9 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
 
                 Call<Void> call = MainActivity.interfaceRetrofit.updateMongo(map);
 
-                call.enqueue(new Callback<Void>() {
+                call.enqueue(new Callback<>() {
                     @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
+                    public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                         if (response.code() == 200) {
 
                             Toast.makeText(context,
@@ -198,8 +199,9 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
                                     context.getResources().getString(R.string.alreadyexist), Toast.LENGTH_LONG).show();
                         }
                     }
+
                     @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
+                    public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                         Toast.makeText(context, t.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
@@ -226,13 +228,13 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
         // IF WE TRY TO DO NETWORK OPERATIONS ON THE MAIN THREAD WE WILL GET AN EXCEPTION AND FREEZE APP
         // INSTEAD WE EXECUTE IT ON THE BACKGROUND THREAD AND RETROFIT PROVIDES THIS WITH "enqueue" METHOD
         // IMPLEMENT THE METHODS WITH "new Callback<List<MongoVariables>>()"
-        call.enqueue(new Callback<List<MongoVariables>>() {
+        call.enqueue(new Callback<>() {
 
-            @Override
             // THIS METHOD WILL BE TRIGGERED WHEN WE GET A RESPONSE FROM THE SERVER
             // HOWEVER THIS DOESN'T MEAN THAT OUR REQUEST WAS SUCCESSFUL
             // THE SERVER COULD RESPOND WITH A HTTP 404 CODE THE DATA WERE NOT THERE
-            public void onResponse(Call<List<MongoVariables>> call, Response<List<MongoVariables>> response) {
+            @Override
+            public void onResponse(@NonNull Call<List<MongoVariables>> call, @NonNull Response<List<MongoVariables>> response) {
                 // IF THE RESPONSE WAS NOT SUCCESSFUL SET THE RESPONSE TO THE HTTP RESPONSE CODE
                 if (!response.isSuccessful()) {
                     Toast.makeText(mRecyclerView.getContext(), "Code: " + response.code(),
@@ -246,15 +248,14 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
                 List<MongoVariables> posts = response.body();
 
                 Gson gson = new Gson();
-                String json = gson.toJson(posts);
                 //System.out.println("JSON sent back from Node.js = " + json);
 
-                jsonDataString = json;
+                jsonDataString = gson.toJson(posts);
                 addItemsFromJSON();
             }
 
             @Override
-            public void onFailure(Call<List<MongoVariables>> call, Throwable t) {
+            public void onFailure(@NonNull Call<List<MongoVariables>> call, @NonNull Throwable t) {
                 Toast.makeText(mRecyclerView.getContext(), t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
@@ -284,7 +285,7 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
         // WE ALSO NEED AN OBJECT OF THE RETROFIT INTERFACE IN MainActivity.java "private InterfaceRetrofit interfaceRetrofit;"
         btnClick.setOnClickListener(view1 -> {
 
-            if (emailEdit.getText().toString().equals("") || passwordEdit.getText().toString().equals("")){
+            if (emailEdit.getText().toString().isEmpty() || passwordEdit.getText().toString().isEmpty()){
                 Toast.makeText(MongoActivity.this,
                         getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -301,12 +302,12 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
                 Call<MongoVariables> call = MainActivity.interfaceRetrofit.selectUserMongo(map);
 
                 // TO EXECUTE THE HTTP REQUEST USE THE "call.enqueue" METHOD WHICH EXPECTS A CALLBACK LISTENER
-                call.enqueue(new Callback<MongoVariables>() {
+                call.enqueue(new Callback<>() {
 
                     // THE "onResponse" METHOD IS CALLED WHEN THE SERVER RESPONDS TO OUR HTTP REQUEST
                     // THE FOLLOWING IS REFERENCED IN THE App.js NODE.JS FILE
                     @Override
-                    public void onResponse(Call<MongoVariables> call, Response<MongoVariables> response) {
+                    public void onResponse(@NonNull Call<MongoVariables> call, @NonNull Response<MongoVariables> response) {
 
                         if (response.code() == 200) {
 
@@ -343,7 +344,7 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
 
                     // 034 - THE "onFailure" METHOD IS CALLED WHEN THE HTTP REQUEST FAILS
                     @Override
-                    public void onFailure(Call<MongoVariables> call, Throwable t) {
+                    public void onFailure(@NonNull Call<MongoVariables> call, @NonNull Throwable t) {
                         Toast.makeText(MongoActivity.this, t.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
@@ -360,10 +361,10 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
         map.put("password", password);
         Call<MongoVariables> call = MainActivity.interfaceRetrofit.selectUserMongo(map);
 
-        call.enqueue(new Callback<MongoVariables>() {
+        call.enqueue(new Callback<>() {
 
             @Override
-            public void onResponse(Call<MongoVariables> call, Response<MongoVariables> response) {
+            public void onResponse(@NonNull Call<MongoVariables> call, @NonNull Response<MongoVariables> response) {
 
                 if (response.code() == 200) {
                     MongoVariables result = response.body();
@@ -380,7 +381,7 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
             }
 
             @Override
-            public void onFailure(Call<MongoVariables> call, Throwable t) {
+            public void onFailure(@NonNull Call<MongoVariables> call, @NonNull Throwable t) {
                 Toast.makeText(mRecyclerView.getContext(), t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
@@ -404,9 +405,9 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (nameEdit.getText().toString().equals("") ||
-                    emailEdit.getText().toString().equals("") ||
-                    passwordEdit.getText().toString().equals("")) {
+            if (nameEdit.getText().toString().isEmpty() ||
+                    emailEdit.getText().toString().isEmpty() ||
+                    passwordEdit.getText().toString().isEmpty()) {
                 Toast.makeText(MongoActivity.this,
                         getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -428,9 +429,9 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
                 // TO EXECUTE THE HTTP REQUEST USE THE "call.enqueue" METHOD WHICH EXPECTS A CALLBACK LISTENER
                 // ADD THE FOLLOWING TO THE MANIFEST "<uses-permission android:name="android.permission.INTERNET" />"
                 // ALSO ADD THIS FOR ANDROID 10 "android:usesCleartextTraffic="true""
-                call.enqueue(new Callback<Void>() {
+                call.enqueue(new Callback<>() {
                     @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
+                    public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 
                         // 041 - IF "(response.code() == 200)" THEN WE SUCCESSFULLY SIGNED UP
                         if (response.code() == 200) {
@@ -445,7 +446,7 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
                     }
 
                     @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
+                    public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                         Toast.makeText(MongoActivity.this, t.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
@@ -458,23 +459,26 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
     private void handleMongoDeleteAllDialog() {
 
         new android.app.AlertDialog.Builder(MongoActivity.this)
-                .setMessage("Delete all entries?" + "\n\n" + "Long click on list items to delete individual users")
+                .setMessage("""
+                        Delete all entries?
+
+                        Long click on list items to delete individual users""")
                 .setCancelable(true)
                 .setPositiveButton("Yes", (dialog, id) -> {
 
                     InterfaceRetrofit api = MainActivity.retrofit.create(InterfaceRetrofit.class);
                     Call<Void> call = api.deleteAllMongo();
 
-                    call.enqueue(new Callback<Void>() {
+                    call.enqueue(new Callback<>() {
                         @Override
-                        public void onResponse(Call<Void> call, Response<Void> response) {
+                        public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 
                             Toast.makeText(MongoActivity.this, "All entries deleted",
                                     Toast.LENGTH_LONG).show();
                         }
 
                         @Override
-                        public void onFailure(Call<Void> call, Throwable t) {
+                        public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                             Toast.makeText(MongoActivity.this, t.getMessage(),
                                     Toast.LENGTH_LONG).show();
                         }
@@ -496,17 +500,17 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
         map.put("password", password);
         Call<Void> call = MainActivity.interfaceRetrofit.deleteUserMongo(map);
 
-        call.enqueue(new Callback<Void>() {
+        call.enqueue(new Callback<>() {
 
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 
                 Toast.makeText(RecyclerAdapter.cText, RecyclerAdapter.cText.getResources().getString(R.string.entrydelete),
                         Toast.LENGTH_LONG).show();
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
+            public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                 Toast.makeText(RecyclerAdapter.cText, t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
@@ -523,7 +527,7 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
             mRecyclerView.setHasFixedSize(true);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(mRecyclerView.getContext());
             mRecyclerView.setLayoutManager(layoutManager);
-            RecyclerView.Adapter mAdapter = new RecyclerAdapter(mRecyclerView.getContext(), viewItems);
+            RecyclerView.Adapter<RecyclerView.ViewHolder> mAdapter = new RecyclerAdapter(mRecyclerView.getContext(), viewItems);
 
             for (int i=0; i<jsonArray.length(); ++i) {
                 JSONObject itemObj = jsonArray.getJSONObject(i);
@@ -556,8 +560,7 @@ public class MongoActivity extends EdgeToEdgeActivity implements AdapterView.OnI
                     .append(",");
         }
         usersBuild.setLength(usersBuild.length() - 1);
-        List<String> nameValues = new ArrayList<>(Arrays.asList(usersBuild.toString().split(",")));
-        return nameValues;
+        return new ArrayList<>(Arrays.asList(usersBuild.toString().split(",")));
     }
 
     // EXPORT ALL DATA AS XLS FILE

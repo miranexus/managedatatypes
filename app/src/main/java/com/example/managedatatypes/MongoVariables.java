@@ -8,10 +8,17 @@ public class MongoVariables {
     // THIS CLASS WILL HAVE STRING MEMBER VARIABLES "name" AND "email"
     // WE CAN ADD A SERIALIZED NAME ANNOTATION TO TELL GSON CONVERTER TO STORE THE DATA WITH KEY "@SerializedName("name");"
     // IF "@SerializedName("name");" AND "private String name;" HAVE THE SAME "name" WE DON'T NEED IT
-    private String date;
-    private String name;
-    private String email;
-    private String password;
+    private final String date;
+    private final String name;
+    private final String email;
+    private final String password;
+
+    public MongoVariables(String date, String name, String email, String password) {
+        this.date = date;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+    }
 
     // WE ADD GETTER METHODS FOR THE VALUES ABOVE SO WE CAN LATER GET THEM OUT OF THE POST OBJECTS TO DISPLAY
     // RIGHT CLICK - GENERATE - GETTER - SELECT ALL - OK

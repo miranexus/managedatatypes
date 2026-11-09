@@ -6,6 +6,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -15,6 +16,7 @@ import java.util.List;
 
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    private static final String TAG = "RecyclerAdapter";
     private final List<Object> listRecyclerItem;
 
     @SuppressLint("StaticFieldLeak")
@@ -149,6 +151,11 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         .setMessage("Delete this entry?")
                         .setCancelable(true)
                         .setPositiveButton("Yes", (dialog, id) -> {
+                            int position = getBindingAdapterPosition();
+                            if (position == RecyclerView.NO_POSITION) {
+                                Log.w(TAG, "Cannot delete an entry that is no longer displayed");
+                                return;
+                            }
                             // GET THE ID OF THE EMAIL OF THE ITEM CLICKED ON THE RECYCLERVIEW
                             String userId = myDBAll.getUserFieldByEmail(emailText, SQLiteContract.SaveUsersTable._ID);
                             if (userId == null) {
@@ -161,9 +168,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                             Toast.makeText(cText, cText.getResources().getString(R.string.entrydelete),
                                     Toast.LENGTH_LONG).show();
                             // REMOVE THE ITEM FROM THE RECYCLER VIEW
-                            listRecyclerItem.remove(getAdapterPosition());
-                            notifyItemRemoved(getAdapterPosition());
-                            notifyItemRangeChanged(getAdapterPosition(),listRecyclerItem.size());
+                            listRecyclerItem.remove(position);
+                            notifyItemRemoved(position);
                         })
                         .setNegativeButton("No", null)
                         .show();
@@ -176,13 +182,17 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         .setMessage("Delete this entry?")
                         .setCancelable(true)
                         .setPositiveButton("Yes", (dialog, id) -> {
+                            int position = getBindingAdapterPosition();
+                            if (position == RecyclerView.NO_POSITION) {
+                                Log.w(TAG, "Cannot delete an entry that is no longer displayed");
+                                return;
+                            }
                             MongoActivity.handleMongoDeleteEmailDialog(nameText, emailText, passwordText);
                             //Toast.makeText(cText, "Mongo Activity = " + emailText + " deleted",
                                     //Toast.LENGTH_LONG).show();
                             // REMOVE THE ITEM FROM THE RECYCLER VIEW
-                            listRecyclerItem.remove(getAdapterPosition());
-                            notifyItemRemoved(getAdapterPosition());
-                            notifyItemRangeChanged(getAdapterPosition(),listRecyclerItem.size());
+                            listRecyclerItem.remove(position);
+                            notifyItemRemoved(position);
                         })
                         .setNegativeButton("No", null)
                         .show();
@@ -195,13 +205,17 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         .setMessage("Delete this entry?")
                         .setCancelable(true)
                         .setPositiveButton("Yes", (dialog, id) -> {
+                            int position = getBindingAdapterPosition();
+                            if (position == RecyclerView.NO_POSITION) {
+                                Log.w(TAG, "Cannot delete an entry that is no longer displayed");
+                                return;
+                            }
                             MySQLPHPActivity.handleMySQLPHPDeleteEmailDialog(nameText, emailText, passwordText);
                             //Toast.makeText(cText, "MySQLPHP Activity = " + emailText + " deleted",
                                     //Toast.LENGTH_LONG).show();
                             // REMOVE THE ITEM FROM THE RECYCLER VIEW
-                            listRecyclerItem.remove(getAdapterPosition());
-                            notifyItemRemoved(getAdapterPosition());
-                            notifyItemRangeChanged(getAdapterPosition(),listRecyclerItem.size());
+                            listRecyclerItem.remove(position);
+                            notifyItemRemoved(position);
                         })
                         .setNegativeButton("No", null)
                         .show();

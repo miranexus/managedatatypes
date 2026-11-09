@@ -1,6 +1,7 @@
 package com.example.managedatatypes;
 
 import androidx.appcompat.widget.Toolbar;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
@@ -67,6 +68,12 @@ public class MainActivity extends EdgeToEdgeActivity {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                 new CalendarFragment()).commit());
 
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleBackPressed();
+            }
+        });
     }
     // END OF ONCREATE
 
@@ -83,10 +90,9 @@ public class MainActivity extends EdgeToEdgeActivity {
     }
 
     // CLOSE FRAGMENTS ON BACK PRESS
-    @Override
-    public void onBackPressed() {
+    private void handleBackPressed() {
         List<Fragment> fragments = getSupportFragmentManager().getFragments();
-        if (fragments.size() > 0) {
+        if (!fragments.isEmpty()) {
             for (Fragment frag : fragments) {
                 getSupportFragmentManager().beginTransaction().remove(frag).commit();
 

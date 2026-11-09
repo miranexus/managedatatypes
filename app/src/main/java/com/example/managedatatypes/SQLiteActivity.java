@@ -35,7 +35,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class SQLiteActivity extends EdgeToEdgeActivity implements AdapterView.OnItemSelectedListener{
@@ -163,7 +162,7 @@ public class SQLiteActivity extends EdgeToEdgeActivity implements AdapterView.On
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (emailEdit.getText().toString().equals("") || passwordEdit.getText().toString().equals("")){
+            if (emailEdit.getText().toString().isEmpty() || passwordEdit.getText().toString().isEmpty()){
                 Toast.makeText(SQLiteActivity.this,
                         getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -174,7 +173,7 @@ public class SQLiteActivity extends EdgeToEdgeActivity implements AdapterView.On
                     Toast.makeText(SQLiteActivity.this, getResources().getString(R.string.entryfound),
                             Toast.LENGTH_LONG).show();
 
-                    setUsersForDisplay(Arrays.asList(user));
+                    setUsersForDisplay(List.of(user));
                 } else {
                     Toast.makeText(SQLiteActivity.this,
                             getResources().getString(R.string.wrongcred), Toast.LENGTH_LONG).show();
@@ -188,7 +187,7 @@ public class SQLiteActivity extends EdgeToEdgeActivity implements AdapterView.On
 
         SQLiteUser user = myDBAll.getUserByEmail(email);
         if (user != null && password.equals(user.getPassword())) {
-            setUsersForDisplay(Arrays.asList(user));
+            setUsersForDisplay(List.of(user));
         }
     }
 
@@ -231,9 +230,9 @@ public class SQLiteActivity extends EdgeToEdgeActivity implements AdapterView.On
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (nameEdit.getText().toString().equals("") ||
-                    emailEdit.getText().toString().equals("") ||
-                    passwordEdit.getText().toString().equals("")) {
+            if (nameEdit.getText().toString().isEmpty() ||
+                    emailEdit.getText().toString().isEmpty() ||
+                    passwordEdit.getText().toString().isEmpty()) {
                 Toast.makeText(SQLiteActivity.this,
                         getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -268,7 +267,10 @@ public class SQLiteActivity extends EdgeToEdgeActivity implements AdapterView.On
     private void handleSQLiteDeleteAllDialog() {
 
         new android.app.AlertDialog.Builder(SQLiteActivity.this)
-                .setMessage("Delete all entries?" + "\n\n" + "Long click on list items to delete individual users")
+                .setMessage("""
+                        Delete all entries?
+
+                        Long click on list items to delete individual users""")
                 .setCancelable(true)
                 .setPositiveButton("Yes", (dialog, id) -> {
                     myDBAll.deleteAllUsers();
@@ -291,7 +293,7 @@ public class SQLiteActivity extends EdgeToEdgeActivity implements AdapterView.On
             mRecyclerView.setHasFixedSize(true);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(mRecyclerView.getContext());
             mRecyclerView.setLayoutManager(layoutManager);
-            RecyclerView.Adapter mAdapter = new RecyclerAdapter(mRecyclerView.getContext(), viewItems);
+            RecyclerView.Adapter<RecyclerView.ViewHolder> mAdapter = new RecyclerAdapter(mRecyclerView.getContext(), viewItems);
             mRecyclerView.setAdapter(mAdapter);
 
             for (int i=0; i<jsonArray.length(); ++i) {

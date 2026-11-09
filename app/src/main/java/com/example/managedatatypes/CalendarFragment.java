@@ -1,5 +1,6 @@
 package com.example.managedatatypes;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -14,6 +15,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
@@ -46,7 +49,9 @@ import retrofit2.Response;
 public class CalendarFragment extends Fragment {
 
     // DECLARE ALL THE CALENDAR VARIABLES
+    @SuppressLint("ConstantLocale")
     public static final Calendar currentCalendar = Calendar.getInstance(Locale.getDefault());
+    @SuppressLint("ConstantLocale")
     public static final SimpleDateFormat dateFormatForMonth = new SimpleDateFormat("MMM - yyyy", Locale.getDefault());
     public static CompactCalendarView compactCalendarView;
     public static ActionBar toolbar;
@@ -63,7 +68,7 @@ public class CalendarFragment extends Fragment {
 
         // SET UP THE SPINNER, OPTIONS CAN BE FOUND IN STRING RESOURCES
         Spinner spinnerCalendar = mainTabView.findViewById(R.id.spinnerCalendar);
-        ArrayAdapter<CharSequence> adapterSpinnerCalendar = ArrayAdapter.createFromResource(getActivity(),
+        ArrayAdapter<CharSequence> adapterSpinnerCalendar = ArrayAdapter.createFromResource(requireActivity(),
                 R.array.spinnerItemsCalendar, android.R.layout.simple_spinner_dropdown_item);
         adapterSpinnerCalendar.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCalendar.setAdapter(adapterSpinnerCalendar);
@@ -124,7 +129,7 @@ public class CalendarFragment extends Fragment {
 
                 try {
                     // CONVERT THE DATE STRING ARRAY TO INTEGER ARRAY
-                    String[] date = jsonBuilder("date");
+                    String[] date = jsonBuilder();
                     int[] dateArray = new int[date.length];
                     for(int di = 0; di < dateArray.length; di++){
                         dateArray[di] = Integer.parseInt(date[di]);
@@ -141,7 +146,7 @@ public class CalendarFragment extends Fragment {
                     }
 
                     // CHECK IF THERE ARE ANY DATA TO ADD TO THE CALENDAR
-                    if (!dateFallBuild.toString().equals("")) {
+                    if (!dateFallBuild.toString().isEmpty()) {
 
                         // CONVERT THE DATE STRING INDICES ARRAY TO AN INTEGER ARRAY
                         String[] index = dateFallBuild.substring(0, dateFallBuild.length() - 1).split("\\s*,\\s*");
@@ -162,19 +167,19 @@ public class CalendarFragment extends Fragment {
                         mRecyclerView.setHasFixedSize(true);
                         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(inflaterDialog.getContext());
                         mRecyclerView.setLayoutManager(layoutManager);
-                        RecyclerView.Adapter mAdapter = new RecyclerAdapter
+                        RecyclerView.Adapter<RecyclerView.ViewHolder> mAdapter = new RecyclerAdapter
                                 (inflaterDialog.getContext(), viewItems);
 
                         // SELECT ONLY THE VALUES WITH THE ABOVE INDICES FROM THE JSON ARRAY AND PASS TO RECYCLERVIEW
                         JSONArray jsonArray = new JSONArray(jsonDataString);
-                        for (int i = 0; i < indexArray.length; ++i) {
-                            JSONObject itemObj = jsonArray.getJSONObject(indexArray[i]);
+                        for (int j : indexArray) {
+                            JSONObject itemObj = jsonArray.getJSONObject(j);
                             String dateObj = itemObj.getString("date");
                             String nameObj = itemObj.getString("name");
                             String emailObj = itemObj.getString("email");
                             String passwordObj = itemObj.getString("password");
                             RecyclerVariables variables = new RecyclerVariables(
-                                    MainActivity.formatDate(dateObj,"yyyy/MM/dd' ('HH:mm:ss)"),
+                                    MainActivity.formatDate(dateObj, "yyyy/MM/dd' ('HH:mm:ss)"),
                                     nameObj,
                                     emailObj,
                                     passwordObj);
@@ -251,8 +256,8 @@ public class CalendarFragment extends Fragment {
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (nameEdit.getText().toString().equals("") ||
-                    passwordEdit.getText().toString().equals("")) {
+            if (nameEdit.getText().toString().isEmpty() ||
+                    passwordEdit.getText().toString().isEmpty()) {
                 Toast.makeText(context,
                         context.getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -271,7 +276,7 @@ public class CalendarFragment extends Fragment {
 
                 call.enqueue(new Callback<Void>() {
                     @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
+                    public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                         if (response.code() == 200) {
 
                             Toast.makeText(context,
@@ -288,7 +293,7 @@ public class CalendarFragment extends Fragment {
                         }
                     }
                     @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
+                    public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                         Toast.makeText(context, t.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
@@ -309,8 +314,8 @@ public class CalendarFragment extends Fragment {
 
         btnClick.setOnClickListener(view1 -> {
 
-            if (nameEdit.getText().toString().equals("") ||
-                    passwordEdit.getText().toString().equals("")) {
+            if (nameEdit.getText().toString().isEmpty() ||
+                    passwordEdit.getText().toString().isEmpty()) {
                 Toast.makeText(context,
                         context.getResources().getString(R.string.fillallfields), Toast.LENGTH_LONG).show();
             } else {
@@ -325,7 +330,7 @@ public class CalendarFragment extends Fragment {
 
                 call.enqueue(new Callback<Void>() {
                     @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
+                    public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
 
                         if(response.isSuccessful()){
                             Toast.makeText(context,context.getResources().getString(R.string.entryupdated), Toast.LENGTH_LONG).show();
@@ -341,7 +346,7 @@ public class CalendarFragment extends Fragment {
                     }
 
                     @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
+                    public void onFailure(@NonNull Call<Void> call, @NonNull Throwable t) {
                         Toast.makeText(context,t.getLocalizedMessage(),Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -381,9 +386,9 @@ public class CalendarFragment extends Fragment {
         compactCalendarView.removeAllEvents();
         InterfaceRetrofit api = MainActivity.retrofit.create(InterfaceRetrofit.class);
         Call<List<MongoVariables>> call = api.selectAllMongo();
-        call.enqueue(new Callback<List<MongoVariables>>() {
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<List<MongoVariables>> call, Response<List<MongoVariables>> response) {
+            public void onResponse(@NonNull Call<List<MongoVariables>> call, @NonNull Response<List<MongoVariables>> response) {
                 if (!response.isSuccessful()) {
                     Toast.makeText(compactCalendarView.getContext(), "Code: " + response.code(),
                             Toast.LENGTH_LONG).show();
@@ -391,17 +396,17 @@ public class CalendarFragment extends Fragment {
                 }
                 List<MongoVariables> posts = response.body();
                 Gson gson = new Gson();
-                String json = gson.toJson(posts);
                 //System.out.println("JSON sent back from Node.js = " + json);
-                jsonDataString = json;
+                jsonDataString = gson.toJson(posts);
                 try {
                     addEvents();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
+
             @Override
-            public void onFailure(Call<List<MongoVariables>> call, Throwable t) {
+            public void onFailure(@NonNull Call<List<MongoVariables>> call, @NonNull Throwable t) {
                 Toast.makeText(compactCalendarView.getContext(), t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
@@ -414,22 +419,22 @@ public class CalendarFragment extends Fragment {
 
         InterfaceRetrofit apiService = MySQLPHPActivity.RetrofitClientInstance.getRetrofitInstance().create(InterfaceRetrofit.class);
         Call<List<MySQLPHPVariables>> call = apiService.selectAllMySQLPHP();
-        call.enqueue(new Callback<List<MySQLPHPVariables>>() {
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<List<MySQLPHPVariables>> call, Response<List<MySQLPHPVariables>> response) {
+            public void onResponse(@NonNull Call<List<MySQLPHPVariables>> call, @NonNull Response<List<MySQLPHPVariables>> response) {
                 List<MySQLPHPVariables> posts = response.body();
                 Gson gson = new Gson();
-                String json = gson.toJson(posts);
                 //System.out.println("JSON sent back from Node.js = " + json);
-                jsonDataString = json;
+                jsonDataString = gson.toJson(posts);
                 try {
                     addEvents();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
+
             @Override
-            public void onFailure(Call<List<MySQLPHPVariables>> call, Throwable throwable) {
+            public void onFailure(@NonNull Call<List<MySQLPHPVariables>> call, @NonNull Throwable throwable) {
                 Toast.makeText(compactCalendarView.getContext(), throwable.getMessage(), Toast.LENGTH_LONG).show();
                 System.out.println(throwable.getMessage());
             }
@@ -445,7 +450,7 @@ public class CalendarFragment extends Fragment {
     }
 
     //  THIS METHOD SAVES CODE TO CREATE A DATE ARRAY FOR THE ADD EVENTS METHOD
-    private static String[] jsonBuilder(String column) throws JSONException {
+    private static String[] jsonBuilder() throws JSONException {
         JSONArray jsonArray = new JSONArray(jsonDataString);
         if (jsonArray.length() == 0) {
             return new String[0];
@@ -455,7 +460,7 @@ public class CalendarFragment extends Fragment {
         for(int nj = 0; nj < jsonArray.length(); nj++){
             JSONObject itemObj = jsonArray.getJSONObject(nj);
             usersBuild
-                    .append(itemObj.getString(column))
+                    .append(itemObj.getString("date"))
                     .append(",");
         }
         usersBuild.setLength(usersBuild.length() - 1);
@@ -472,7 +477,7 @@ public class CalendarFragment extends Fragment {
         Date firstDayOfMonth = currentCalendar.getTime();
 
         // GET THE LIST OF TIMESTAMPS FROM THE DATABASE
-        String[] timeStampArray = jsonBuilder("date");
+        String[] timeStampArray = jsonBuilder();
         if (timeStampArray.length == 0) {
             return;
         }
@@ -484,9 +489,9 @@ public class CalendarFragment extends Fragment {
         StringBuilder monthStampBuild = new StringBuilder();
         StringBuilder datesStampBuild = new StringBuilder();
 
-        for(int ts = 0; ts < timeStampArray.length; ts++){
+        for (String s : timeStampArray) {
             Calendar calendarMilli = Calendar.getInstance(Locale.getDefault());
-            long timeFirst = Integer.parseInt(timeStampArray[ts]);
+            long timeFirst = Integer.parseInt(s);
             long timeSecond = timeFirst * 1000;
             calendarMilli.setTimeInMillis(timeSecond);
             yearsStampBuild.append(DateFormat.format("yyyy", calendarMilli).toString()).append(",");
@@ -531,7 +536,7 @@ public class CalendarFragment extends Fragment {
 
             // CREATE A LIST TO ADD EVENTS
             List<Event> events = new ArrayList<>();
-            events.add(0, new Event(Color.argb(255, 226, 29, 56), timeInMillis, "" + sdf.format(new Date(timeInMillistamp * 1000))));
+            events.add(0, new Event(Color.argb(255, 226, 29, 56), timeInMillis, sdf.format(new Date(timeInMillistamp * 1000))));
 
             // ADD ALL EVENTS TO THE CALENDAR
             compactCalendarView.addEvents(events);

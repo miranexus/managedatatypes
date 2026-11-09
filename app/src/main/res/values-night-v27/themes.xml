@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.LetsRetrofit" parent="Base.Theme.LetsRetrofit">
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

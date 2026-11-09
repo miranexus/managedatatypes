@@ -11,10 +11,9 @@ public class MySQLPHPVariables {
     private String email;
     @SerializedName("password")
     private String password;
-    @SerializedName("success")
-    private boolean success;
-    @SerializedName("message")
-    private boolean message;
+
+    public MySQLPHPVariables() {
+    }
 
     public String getDate() {
         return date;
@@ -40,16 +39,5 @@ public class MySQLPHPVariables {
     public void setPassword(String password) {
         this.password = password;
     }
-    public boolean isSuccess() {
-        return success;
-    }
-    public void setSuccess(boolean success) {
-        this.success = success;
-    }
-    public boolean isMessage() {
-        return message;
-    }
-    public void setMessage(boolean message) {
-        this.message = message;
-    }
+
 }
